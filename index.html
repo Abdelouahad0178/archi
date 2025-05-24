@@ -2,13 +2,14 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=3.0, user-scalable=yes">
     <title>ArchiDraw - Plateforme de Dessin Architectural</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            touch-action: none; /* Prevent default touch behaviors */
         }
 
         body {
@@ -24,28 +25,28 @@
 
         /* Toolbar */
         .toolbar {
-            width: 60px;
+            width: 70px;
             background: #333;
             padding: 10px 5px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             overflow-y: auto;
             max-height: 100vh;
         }
 
         .tool-btn {
-            width: 50px;
-            height: 50px;
+            width: 60px;
+            height: 60px;
             background: #555;
             border: 2px solid #666;
-            border-radius: 5px;
+            border-radius: 8px;
             color: white;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 12px;
+            font-size: 14px;
             transition: all 0.3s;
         }
 
@@ -65,7 +66,7 @@
             background: #ddd;
             position: relative;
             overflow: hidden;
-            padding-top: 80px;
+            padding-top: 100px;
         }
 
         #drawingCanvas {
@@ -77,6 +78,10 @@
             border: 2px solid #333;
             cursor: crosshair;
             box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            width: 1000px;
+            height: 700px;
+            max-width: 90vw;
+            max-height: 70vh;
         }
 
         /* Properties Panel */
@@ -86,6 +91,11 @@
             padding: 20px;
             border-left: 1px solid #ccc;
             overflow-y: auto;
+            transition: transform 0.3s;
+        }
+
+        .properties.hidden {
+            transform: translateX(100%);
         }
 
         .property-group {
@@ -112,7 +122,7 @@
         .property input,
         .property select {
             width: 100%;
-            padding: 5px;
+            padding: 8px;
             border: 1px solid #ccc;
             border-radius: 3px;
         }
@@ -121,31 +131,29 @@
         .header {
             position: absolute;
             top: 0;
-            left: 60px;
-            right: 250px;
-            height: 80px;
+            left: 70px;
+            right: 0;
+            height: 100px;
             background: white;
             border-bottom: 1px solid #ccc;
             padding: 10px 20px;
             z-index: 100;
-        }
-
-        .header-top {
             display: flex;
-            align-items: center;
+            flex-direction: column;
             gap: 10px;
-            margin-bottom: 10px;
         }
 
+        .header-top,
         .header-bottom {
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-wrap: wrap;
         }
 
         .tool-group {
             display: flex;
-            gap: 5px;
+            gap: 8px;
             padding: 0 10px;
             border-right: 1px solid #ddd;
         }
@@ -155,13 +163,13 @@
         }
 
         .btn {
-            padding: 8px 16px;
+            padding: 10px 20px;
             background: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 16px;
         }
 
         .btn:hover {
@@ -173,15 +181,15 @@
         }
 
         .btn-icon {
-            padding: 8px;
+            padding: 10px;
             background: #f0f0f0;
             color: #333;
             border: 1px solid #ccc;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            width: 36px;
-            height: 36px;
+            font-size: 18px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -206,23 +214,69 @@
         .coordinates {
             position: absolute;
             bottom: 10px;
-            left: 70px;
+            left: 80px;
             background: rgba(0,0,0,0.7);
             color: white;
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 3px;
-            font-size: 12px;
+            font-size: 14px;
         }
 
         /* Grid Toggle */
         .grid-toggle {
             position: absolute;
             bottom: 10px;
-            right: 260px;
+            right: 20px;
             background: white;
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 3px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        /* Properties Toggle */
+        .properties-toggle {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 101;
+            padding: 10px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                width: 60px;
+            }
+            .tool-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 12px;
+            }
+            .header {
+                left: 60px;
+                padding: 8px;
+            }
+            .properties {
+                position: fixed;
+                top: 0;
+                right: 0;
+                height: 100%;
+                z-index: 100;
+                transform: translateX(100%);
+            }
+            .properties.active {
+                transform: translateX(0);
+            }
+            .canvas-area {
+                padding-top: 120px;
+            }
+            #drawingCanvas {
+                max-width: 95vw;
+                max-height: 60vh;
+            }
         }
     </style>
 </head>
@@ -294,7 +348,7 @@
                 </div>
             </div>
             
-            <canvas id="drawingCanvas" width="1000" height="700"></canvas>
+            <canvas id="drawingCanvas"></canvas>
             
             <div class="coordinates" id="coords">X: 0, Y: 0</div>
             
@@ -303,10 +357,12 @@
                     <input type="checkbox" id="showGrid" checked> Afficher la grille
                 </label>
             </div>
+            
+            <button class="properties-toggle" onclick="toggleProperties()">⚙</button>
         </div>
 
         <!-- Properties Panel -->
-        <div class="properties">
+        <div class="properties hidden">
             <h2>Propriétés</h2>
             
             <div class="property-group">
@@ -371,6 +427,9 @@
         let shapes = [];
         let selectedShape = null;
         let tempShape = null;
+        let lastTap = 0;
+        let isPinching = false;
+        let initialPinchDistance = 0;
         
         // Historique pour undo/redo
         let history = [];
@@ -390,6 +449,10 @@
 
         // Initialisation
         function init() {
+            // Set canvas size
+            canvas.width = Math.min(1000, window.innerWidth * 0.9);
+            canvas.height = Math.min(700, window.innerHeight * 0.7);
+
             setupEventListeners();
             saveHistory();
             updateHistoryButtons();
@@ -407,6 +470,13 @@
                     currentTool = this.dataset.tool;
                     canvas.style.cursor = currentTool === 'select' ? 'default' : 'crosshair';
                 });
+                btn.addEventListener('touchend', function(e) {
+                    e.preventDefault();
+                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentTool = this.dataset.tool;
+                    canvas.style.cursor = currentTool === 'select' ? 'default' : 'crosshair';
+                });
             });
 
             // Canvas events
@@ -414,6 +484,10 @@
             canvas.addEventListener('mousemove', handleMouseMove);
             canvas.addEventListener('mouseup', handleMouseUp);
             canvas.addEventListener('dblclick', handleDoubleClick);
+
+            canvas.addEventListener('touchstart', handleTouchStart);
+            canvas.addEventListener('touchmove', handleTouchMove);
+            canvas.addEventListener('touchend', handleTouchEnd);
 
             // Properties
             document.getElementById('strokeWidth').addEventListener('input', updateStrokeWidthDisplay);
@@ -424,79 +498,185 @@
             document.addEventListener('keydown', handleKeyDown);
         }
 
+        // Touch handlers
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touches = e.changedTouches;
+            if (touches.length === 1) {
+                const rect = canvas.getBoundingClientRect();
+                let x = (touches[0].clientX - rect.left) / zoom;
+                let y = (touches[0].clientY - rect.top) / zoom;
+
+                // Snap to grid
+                if (snapToGrid) {
+                    const gridSize = parseInt(document.getElementById('gridSize').value);
+                    x = Math.round(x / gridSize) * gridSize;
+                    y = Math.round(y / gridSize) * gridSize;
+                }
+
+                // Double-tap detection
+                const currentTime = new Date().getTime();
+                const tapInterval = currentTime - lastTap;
+                if (tapInterval < 300 && tapInterval > 0) {
+                    handleDoubleTap({ clientX: touches[0].clientX, clientY: touches[0].clientY });
+                    lastTap = 0;
+                } else {
+                    lastTap = currentTime;
+                    startX = x;
+                    startY = y;
+                    isDrawing = true;
+
+                    if (currentTool === 'select') {
+                        selectShape(startX, startY);
+                    } else if (currentTool === 'erase') {
+                        eraseShape(startX, startY);
+                    } else if (currentTool === 'text') {
+                        addText(startX, startY);
+                    } else if (currentTool === 'dimension') {
+                        if (!dimensionStart) {
+                            dimensionStart = { x: startX, y: startY };
+                        } else {
+                            createDimension(dimensionStart.x, dimensionStart.y, startX, startY);
+                            dimensionStart = null;
+                        }
+                    }
+                }
+            } else if (touches.length === 2) {
+                isPinching = true;
+                const dx = touches[0].clientX - touches[1].clientX;
+                const dy = touches[0].clientY - touches[1].clientY;
+                initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+            }
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            const touches = e.changedTouches;
+            if (touches.length === 1 && isDrawing && !isPinching) {
+                const rect = canvas.getBoundingClientRect();
+                let x = (touches[0].clientX - rect.left) / zoom;
+                let y = (touches[0].clientY - rect.top) / zoom;
+
+                if (snapToGrid) {
+                    const gridSize = parseInt(document.getElementById('gridSize').value);
+                    x = Math.round(x / gridSize) * gridSize;
+                    y = Math.round(y / gridSize) * gridSize;
+                }
+
+                document.getElementById('coords').textContent = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
+
+                if (currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
+                    redraw();
+                    drawTempShape(x, y);
+                }
+            } else if (touches.length === 2 && isPinching) {
+                const dx = touches[0].clientX - touches[1].clientX;
+                const dy = touches[0].clientY - touches[1].clientY;
+                const currentPinchDistance = Math.sqrt(dx * dx + dy * dy);
+                const zoomFactor = currentPinchDistance / initialPinchDistance;
+                zoom = Math.min(Math.max(zoom * zoomFactor, 0.3), 3);
+                initialPinchDistance = currentPinchDistance;
+                redraw();
+            }
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            const touches = e.changedTouches;
+            if (touches.length === 1 && isDrawing && !isPinching) {
+                const rect = canvas.getBoundingClientRect();
+                let endX = (touches[0].clientX - rect.left) / zoom;
+                let endY = (touches[0].clientY - rect.top) / zoom;
+
+                if (snapToGrid) {
+                    const gridSize = parseInt(document.getElementById('gridSize').value);
+                    endX = Math.round(endX / gridSize) * gridSize;
+                    endY = Math.round(endY / gridSize) * gridSize;
+                }
+
+                if (currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
+                    createShape(endX, endY);
+                }
+
+                isDrawing = false;
+            }
+            isPinching = false;
+        }
+
         // Mouse handlers
         function handleMouseDown(e) {
-            const rect = canvas.getBoundingClientRect();
-            let x = (e.clientX - rect.left) / zoom;
-            let y = (e.clientY - rect.top) / zoom;
-            
-            // Snap to grid si activé
-            if (snapToGrid) {
-                const gridSize = parseInt(document.getElementById('gridSize').value);
-                x = Math.round(x / gridSize) * gridSize;
-                y = Math.round(y / gridSize) * gridSize;
-            }
-            
-            startX = x;
-            startY = y;
-            isDrawing = true;
+            if (e.type === 'mousedown') {
+                e.preventDefault();
+                const rect = canvas.getBoundingClientRect();
+                let x = (e.clientX - rect.left) / zoom;
+                let y = (e.clientY - rect.top) / zoom;
 
-            if (currentTool === 'select') {
-                selectShape(startX, startY);
-            } else if (currentTool === 'erase') {
-                eraseShape(startX, startY);
-            } else if (currentTool === 'text') {
-                addText(startX, startY);
-            } else if (currentTool === 'dimension') {
-                if (!dimensionStart) {
-                    dimensionStart = {x: startX, y: startY};
-                } else {
-                    createDimension(dimensionStart.x, dimensionStart.y, startX, startY);
-                    dimensionStart = null;
+                if (snapToGrid) {
+                    const gridSize = parseInt(document.getElementById('gridSize').value);
+                    x = Math.round(x / gridSize) * gridSize;
+                    y = Math.round(y / gridSize) * gridSize;
+                }
+
+                startX = x;
+                startY = y;
+                isDrawing = true;
+
+                if (currentTool === 'select') {
+                    selectShape(startX, startY);
+                } else if (currentTool === 'erase') {
+                    eraseShape(startX, startY);
+                } else if (currentTool === 'text') {
+                    addText(startX, startY);
+                } else if (currentTool === 'dimension') {
+                    if (!dimensionStart) {
+                        dimensionStart = { x: startX, y: startY };
+                    } else {
+                        createDimension(dimensionStart.x, dimensionStart.y, startX, startY);
+                        dimensionStart = null;
+                    }
                 }
             }
         }
 
         function handleMouseMove(e) {
-            const rect = canvas.getBoundingClientRect();
-            let x = (e.clientX - rect.left) / zoom;
-            let y = (e.clientY - rect.top) / zoom;
-            
-            // Snap to grid si activé
-            if (snapToGrid && isDrawing) {
-                const gridSize = parseInt(document.getElementById('gridSize').value);
-                x = Math.round(x / gridSize) * gridSize;
-                y = Math.round(y / gridSize) * gridSize;
-            }
+            if (e.type === 'mousemove') {
+                const rect = canvas.getBoundingClientRect();
+                let x = (e.clientX - rect.left) / zoom;
+                let y = (e.clientY - rect.top) / zoom;
 
-            // Update coordinates
-            document.getElementById('coords').textContent = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
+                if (snapToGrid && isDrawing) {
+                    const gridSize = parseInt(document.getElementById('gridSize').value);
+                    x = Math.round(x / gridSize) * gridSize;
+                    y = Math.round(y / gridSize) * gridSize;
+                }
 
-            if (isDrawing && currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
-                redraw();
-                drawTempShape(x, y);
+                document.getElementById('coords').textContent = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
+
+                if (isDrawing && currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
+                    redraw();
+                    drawTempShape(x, y);
+                }
             }
         }
 
         function handleMouseUp(e) {
-            if (!isDrawing) return;
-            
-            const rect = canvas.getBoundingClientRect();
-            let endX = (e.clientX - rect.left) / zoom;
-            let endY = (e.clientY - rect.top) / zoom;
-            
-            // Snap to grid si activé
-            if (snapToGrid) {
-                const gridSize = parseInt(document.getElementById('gridSize').value);
-                endX = Math.round(endX / gridSize) * gridSize;
-                endY = Math.round(endY / gridSize) * gridSize;
-            }
+            if (e.type === 'mouseup' && isDrawing) {
+                const rect = canvas.getBoundingClientRect();
+                let endX = (e.clientX - rect.left) / zoom;
+                let endY = (e.clientY - rect.top) / zoom;
 
-            if (currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
-                createShape(endX, endY);
-            }
+                if (snapToGrid) {
+                    const gridSize = parseInt(document.getElementById('gridSize').value);
+                    endX = Math.round(endX / gridSize) * gridSize;
+                    endY = Math.round(endY / gridSize) * gridSize;
+                }
 
-            isDrawing = false;
+                if (currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
+                    createShape(endX, endY);
+                }
+
+                isDrawing = false;
+            }
         }
 
         function handleDoubleClick(e) {
@@ -506,6 +686,23 @@
                     selectedShape.text = newText.trim();
                     saveHistory();
                     redraw();
+                }
+            }
+        }
+
+        function handleDoubleTap(e) {
+            if (currentTool === 'select') {
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / zoom;
+                const y = (e.clientY - rect.top) / zoom;
+                selectShape(x, y);
+                if (selectedShape && selectedShape.type === 'text') {
+                    const newText = prompt('Modifier le texte:', selectedShape.text);
+                    if (newText !== null && newText.trim() !== '') {
+                        selectedShape.text = newText.trim();
+                        saveHistory();
+                        redraw();
+                    }
                 }
             }
         }
@@ -691,7 +888,6 @@
         function redraw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Appliquer le zoom
             ctx.save();
             ctx.scale(zoom, zoom);
             
@@ -1341,6 +1537,12 @@
             alert('Fonction règles en développement');
         }
 
+        function toggleProperties() {
+            const properties = document.querySelector('.properties');
+            properties.classList.toggle('hidden');
+            properties.classList.toggle('active');
+        }
+
         // Export image
         function exportImage() {
             const link = document.createElement('a');
@@ -1433,7 +1635,7 @@
                     border: none;
                     box-shadow: none;
                 }
-                .toolbar, .properties, .header, .coordinates, .grid-toggle {
+                .toolbar, .properties, .header, .coordinates, .grid-toggle, .properties-toggle {
                     display: none !important;
                 }
             }
