@@ -1,4 +1,4 @@
-// shapes.js - Gestion des formes ArchiDraw
+// shapes.js - Gestion des formes ArchiDraw avec redimensionnement
 
 // Shape creation
 function createShape(endX, endY) {
@@ -63,16 +63,22 @@ function addText(x, y) {
     }
 }
 
-// Selection avec affichage des infos de transformation
+// Selection avec affichage des infos de transformation et mise à jour du panneau
 function selectShape(x, y) {
     selectedShape = null;
     for (let i = shapes.length - 1; i >= 0; i--) {
         if (isPointInShape(x, y, shapes[i])) {
             selectedShape = shapes[i];
             showTransformInfo();
+            updateShapePropertiesPanel();
             break;
         }
     }
+    
+    if (!selectedShape) {
+        updateShapePropertiesPanel();
+    }
+    
     redraw();
 }
 
@@ -324,6 +330,166 @@ function rotateSelected(degrees) {
     const center = getShapeCenter(selectedShape);
     const radians = (degrees * Math.PI) / 180;
     rotateShape(selectedShape, radians, center);
+    updateShapePropertiesPanel();
+    saveHistory();
+    redraw();
+}
+
+// Mise à jour du panneau de propriétés des formes
+function updateShapePropertiesPanel() {
+    const panel = document.getElementById('shapeProperties');
+    if (!panel) return;
+    
+    if (!selectedShape) {
+        panel.style.display = 'none';
+        return;
+    }
+    
+    panel.style.display = 'block';
+    
+    const widthInput = document.getElementById('shapeWidth');
+    const heightInput = document.getElementById('shapeHeight');
+    const xInput = document.getElementById('shapeX');
+    const yInput = document.getElementById('shapeY');
+    const radiusInput = document.getElementById('shapeRadius');
+    const radiusProperty = document.getElementById('radiusProperty');
+    
+    if (!widthInput || !heightInput || !xInput || !yInput || !radiusInput || !radiusProperty) {
+        return;
+    }
+    
+    // Réinitialiser la visibilité
+    radiusProperty.style.display = 'none';
+    widthInput.parentElement.style.display = 'block';
+    heightInput.parentElement.style.display = 'block';
+    
+    switch (selectedShape.type) {
+        case 'rectangle':
+        case 'window':
+        case 'stairs':
+        case 'elevator':
+        case 'technical':
+        case 'furniture':
+        case 'bathroom':
+        case 'kitchen':
+            const width = Math.abs(selectedShape.endX - selectedShape.startX);
+            const height = Math.abs(selectedShape.endY - selectedShape.startY);
+            const x = Math.min(selectedShape.startX, selectedShape.endX);
+            const y = Math.min(selectedShape.startY, selectedShape.endY);
+            
+            widthInput.value = Math.round(width);
+            heightInput.value = Math.round(height);
+            xInput.value = Math.round(x);
+            yInput.value = Math.round(y);
+            break;
+            
+        case 'circle':
+            radiusProperty.style.display = 'block';
+            widthInput.parentElement.style.display = 'none';
+            heightInput.parentElement.style.display = 'none';
+            
+            radiusInput.value = Math.round(selectedShape.radius);
+            xInput.value = Math.round(selectedShape.startX);
+            yInput.value = Math.round(selectedShape.startY);
+            break;
+            
+        case 'line':
+        case 'wall':
+            widthInput.parentElement.style.display = 'none';
+            heightInput.parentElement.style.display = 'none';
+            
+            xInput.value = Math.round(selectedShape.startX);
+            yInput.value = Math.round(selectedShape.startY);
+            break;
+            
+        case 'text':
+            widthInput.parentElement.style.display = 'none';
+            heightInput.parentElement.style.display = 'none';
+            
+            xInput.value = Math.round(selectedShape.x);
+            yInput.value = Math.round(selectedShape.y);
+            break;
+            
+        default:
+            if (selectedShape.startX !== undefined && selectedShape.endX !== undefined) {
+                const w = Math.abs(selectedShape.endX - selectedShape.startX);
+                const h = Math.abs(selectedShape.endY - selectedShape.startY);
+                const sx = Math.min(selectedShape.startX, selectedShape.endX);
+                const sy = Math.min(selectedShape.startY, selectedShape.endY);
+                
+                widthInput.value = Math.round(w);
+                heightInput.value = Math.round(h);
+                xInput.value = Math.round(sx);
+                yInput.value = Math.round(sy);
+            }
+            break;
+    }
+}
+
+function updateShapePropertiesDisplay() {
+    // Cette fonction est appelée quand l'utilisateur modifie les valeurs dans le panneau
+    // La mise à jour se fait via applyShapeProperties()
+}
+
+function applyShapeProperties() {
+    if (!selectedShape) return;
+    
+    const widthInput = document.getElementById('shapeWidth');
+    const heightInput = document.getElementById('shapeHeight');
+    const xInput = document.getElementById('shapeX');
+    const yInput = document.getElementById('shapeY');
+    const radiusInput = document.getElementById('shapeRadius');
+    
+    if (!xInput || !yInput) return;
+    
+    const newX = parseFloat(xInput.value);
+    const newY = parseFloat(yInput.value);
+    
+    switch (selectedShape.type) {
+        case 'rectangle':
+        case 'window':
+        case 'stairs':
+        case 'elevator':
+        case 'technical':
+        case 'furniture':
+        case 'bathroom':
+        case 'kitchen':
+            if (widthInput && heightInput) {
+                const newWidth = Math.max(10, parseFloat(widthInput.value));
+                const newHeight = Math.max(10, parseFloat(heightInput.value));
+                
+                selectedShape.startX = newX;
+                selectedShape.startY = newY;
+                selectedShape.endX = newX + newWidth;
+                selectedShape.endY = newY + newHeight;
+            }
+            break;
+            
+        case 'circle':
+            if (radiusInput) {
+                const newRadius = Math.max(5, parseFloat(radiusInput.value));
+                selectedShape.startX = newX;
+                selectedShape.startY = newY;
+                selectedShape.radius = newRadius;
+            }
+            break;
+            
+        case 'line':
+        case 'wall':
+            const deltaX = newX - selectedShape.startX;
+            const deltaY = newY - selectedShape.startY;
+            selectedShape.startX = newX;
+            selectedShape.startY = newY;
+            selectedShape.endX += deltaX;
+            selectedShape.endY += deltaY;
+            break;
+            
+        case 'text':
+            selectedShape.x = newX;
+            selectedShape.y = newY;
+            break;
+    }
+    
     saveHistory();
     redraw();
 }
@@ -347,7 +513,7 @@ function showTransformInfo() {
     infoDiv.style.cssText = `
         position: fixed;
         top: 130px;
-        right: 20px;
+        right: 280px;
         background: rgba(0,0,0,0.9);
         color: white;
         padding: 12px;
@@ -359,28 +525,56 @@ function showTransformInfo() {
         max-width: 250px;
     `;
     
+    let dimensionsInfo = '';
+    switch (selectedShape.type) {
+        case 'rectangle':
+        case 'window':
+        case 'stairs':
+        case 'elevator':
+        case 'technical':
+        case 'furniture':
+        case 'bathroom':
+        case 'kitchen':
+            const width = Math.abs(selectedShape.endX - selectedShape.startX);
+            const height = Math.abs(selectedShape.endY - selectedShape.startY);
+            dimensionsInfo = `<div><strong>Taille:</strong> ${Math.round(width)} × ${Math.round(height)}px</div>`;
+            break;
+        case 'circle':
+            dimensionsInfo = `<div><strong>Rayon:</strong> ${Math.round(selectedShape.radius)}px</div>`;
+            break;
+        case 'line':
+        case 'wall':
+            const length = Math.sqrt(
+                Math.pow(selectedShape.endX - selectedShape.startX, 2) + 
+                Math.pow(selectedShape.endY - selectedShape.startY, 2)
+            );
+            dimensionsInfo = `<div><strong>Longueur:</strong> ${Math.round(length)}px</div>`;
+            break;
+    }
+    
     infoDiv.innerHTML = `
         <div style="font-weight: bold; color: #4CAF50; margin-bottom: 8px;">
             📐 Forme sélectionnée
         </div>
         <div><strong>Type:</strong> ${selectedShape.type}</div>
         <div><strong>Centre:</strong> (${Math.round(center.x)}, ${Math.round(center.y)})</div>
+        ${dimensionsInfo}
         <div><strong>Rotation:</strong> ${rotation}°</div>
         <hr style="margin: 8px 0; opacity: 0.3;">
         <div style="font-size: 11px; color: #ccc; line-height: 1.4;">
-            🖱️ <strong>Glisser:</strong> Déplacer la forme<br>
+            🖱️ <strong>Glisser:</strong> Déplacer<br>
+            🟧 <strong>Poignées orange:</strong> Redimensionner<br>
             🔵 <strong>Poignées bleues:</strong> Rotation libre<br>
-            ⌨️ <strong>Touche R:</strong> Rotation 90°<br>
-            🔲 <strong>Échap:</strong> Désélectionner
+            ⌨️ <strong>R:</strong> Rotation 90° | <strong>Échap:</strong> Désélectionner
         </div>
     `;
     
     document.body.appendChild(infoDiv);
     
-    // Masquer automatiquement après 5 secondes
+    // Masquer automatiquement après 6 secondes
     setTimeout(() => {
         if (infoDiv && infoDiv.parentNode) {
             infoDiv.remove();
         }
-    }, 5000);
+    }, 6000);
 }

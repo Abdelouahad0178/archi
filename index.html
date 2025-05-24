@@ -13,8 +13,8 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: #f0f0f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             overflow: hidden;
         }
 
@@ -23,131 +23,135 @@
             height: 100vh;
         }
 
-        /* Toolbar */
+        /* Toolbar améliorée */
         .toolbar {
             width: 70px;
-            background: #333;
+            background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
             padding: 10px 5px;
             display: flex;
             flex-direction: column;
             gap: 12px;
             overflow-y: auto;
             max-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
         }
 
         .tool-btn {
             width: 60px;
             height: 60px;
-            background: #555;
-            border: 2px solid #666;
-            border-radius: 8px;
+            background: linear-gradient(145deg, #555 0%, #666 100%);
+            border: 2px solid #777;
+            border-radius: 12px;
             color: white;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            transition: all 0.3s;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
         .tool-btn:hover {
-            background: #666;
-            transform: scale(1.1);
+            background: linear-gradient(145deg, #666 0%, #777 100%);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
         }
 
         .tool-btn.active {
-            background: #4CAF50;
+            background: linear-gradient(145deg, #4CAF50 0%, #45a049 100%);
             border-color: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 15px rgba(76, 175, 80, 0.4);
         }
 
         .tool-btn.erase-mode {
-            background: #ff4444;
+            background: linear-gradient(145deg, #ff4444 0%, #cc0000 100%);
             border-color: #cc0000;
+            animation: pulse 2s infinite;
         }
 
-        /* Canvas Area */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 68, 68, 0); }
+        }
+
+        /* Canvas Area améliorée */
         .canvas-area {
             flex: 1;
-            background: #ddd;
+            background: linear-gradient(45deg, #ddd 0%, #f9f9f9 100%);
             position: relative;
             overflow: hidden;
-            padding-top: 80px; /* Réduit pour plus d'espace */
+            padding-top: 80px;
         }
 
         #drawingCanvas {
-            background: white;
+            background: #ffffff;
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            border: 1px solid #333;
+            border: 2px solid #34495e;
             cursor: crosshair;
-            box-shadow: 0 0 5px rgba(0,0,0,0.2);
-            /* Canvas maximisé */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 8px;
             width: calc(100vw - 320px);
             height: calc(100vh - 100px);
             max-width: none;
             max-height: none;
-            /* Curseurs personnalisés selon l'outil */
         }
 
-        /* Curseurs spécialisés pour chaque outil */
-        #drawingCanvas.cursor-select {
-            cursor: default;
+        /* Curseurs spécialisés avec animations */
+        #drawingCanvas.cursor-select { cursor: default; }
+        #drawingCanvas.cursor-line { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="2" y1="2" x2="22" y2="22" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
         }
-
-        #drawingCanvas.cursor-line {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="2" y1="2" x2="22" y2="22" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair;
+        #drawingCanvas.cursor-rectangle { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
         }
-
-        #drawingCanvas.cursor-rectangle {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="none" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair;
+        #drawingCanvas.cursor-circle { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
         }
-
-        #drawingCanvas.cursor-circle {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair;
+        #drawingCanvas.cursor-wall { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2" y="10" width="20" height="4" fill="black"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
         }
-
-        #drawingCanvas.cursor-wall {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="2" y="10" width="20" height="4" fill="black"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair;
+        #drawingCanvas.cursor-door { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" fill="none" stroke="brown" stroke-width="2"/><path d="M6 20 Q18 20 18 4" fill="none" stroke="gray" stroke-width="1" stroke-dasharray="2,2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
         }
-
-        #drawingCanvas.cursor-door {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="16" fill="none" stroke="brown" stroke-width="2"/><path d="M6 20 Q18 20 18 4" fill="none" stroke="gray" stroke-width="1" stroke-dasharray="2,2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair;
+        #drawingCanvas.cursor-window { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" fill="lightblue" stroke="black" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="16" stroke="black"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
         }
-
-        #drawingCanvas.cursor-window {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" fill="lightblue" stroke="black" stroke-width="2"/><line x1="12" y1="8" x2="12" y2="16" stroke="black"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair;
+        #drawingCanvas.cursor-text { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><text x="12" y="16" text-anchor="middle" font-size="14" fill="black">T</text><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, text; 
         }
-
-        #drawingCanvas.cursor-text {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><text x="12" y="16" text-anchor="middle" font-size="14" fill="black">T</text><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, text;
+        #drawingCanvas.cursor-dimension { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12" stroke="red" stroke-width="2"/><polygon points="4,10 4,14 2,12" fill="red"/><polygon points="20,10 20,14 22,12" fill="red"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
         }
-
-        #drawingCanvas.cursor-dimension {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12" stroke="red" stroke-width="2"/><polygon points="4,10 4,14 2,12" fill="red"/><polygon points="20,10 20,14 22,12" fill="red"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair;
+        #drawingCanvas.cursor-move { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="black"><polygon points="12,2 14,6 10,6"/><polygon points="12,22 10,18 14,18"/><polygon points="2,12 6,10 6,14"/><polygon points="22,12 18,14 18,10"/></g><circle cx="12" cy="12" r="3" fill="blue"/></svg>') 12 12, move; 
         }
-
-        #drawingCanvas.cursor-move {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="black"><polygon points="12,2 14,6 10,6"/><polygon points="12,22 10,18 14,18"/><polygon points="2,12 6,10 6,14"/><polygon points="22,12 18,14 18,10"/></g><circle cx="12" cy="12" r="3" fill="blue"/></svg>') 12 12, move;
+        #drawingCanvas.cursor-rotate { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 6v6l4-4-4-4z" fill="blue"/><path d="M12 6A6 6 0 1 1 6 12" fill="none" stroke="blue" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="blue"/></svg>') 12 12, grab; 
         }
-
-        #drawingCanvas.cursor-rotate {
-            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M12 6v6l4-4-4-4z" fill="blue"/><path d="M12 6A6 6 0 1 1 6 12" fill="none" stroke="blue" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="blue"/></svg>') 12 12, grab;
+        #drawingCanvas.cursor-resize { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><polygon points="2,2 6,2 6,6" fill="orange"/><polygon points="18,2 22,2 22,6" fill="orange"/><polygon points="2,18 6,18 6,22" fill="orange"/><polygon points="18,18 22,18 22,22" fill="orange"/><circle cx="12" cy="12" r="2" fill="orange"/></svg>') 12 12, nw-resize; 
         }
 
         .canvas-area.erase-mode #drawingCanvas {
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="12" fill="red" opacity="0.3" stroke="red" stroke-width="2"/><text x="16" y="20" text-anchor="middle" fill="white" font-size="14">✕</text><circle cx="16" cy="16" r="2" fill="red"/></svg>') 16 16, auto;
         }
 
-        /* Properties Panel */
+        /* Properties Panel amélioré */
         .properties {
             width: 250px;
-            background: #f9f9f9;
+            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
             padding: 20px;
-            border-left: 1px solid #ccc;
+            border-left: 1px solid #e9ecef;
             overflow-y: auto;
-            transition: transform 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.1);
         }
 
         .properties.hidden {
@@ -155,63 +159,102 @@
         }
 
         .property-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #e9ecef;
         }
 
         .property-group h3 {
             font-size: 16px;
-            margin-bottom: 10px;
-            color: #333;
+            margin-bottom: 12px;
+            color: #2c3e50;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .property-group h3:before {
+            content: '🎨';
+            font-size: 14px;
+        }
+
+        .property-group#shapeProperties h3:before {
+            content: '📏';
         }
 
         .property {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
 
         .property label {
             display: block;
             font-size: 14px;
-            margin-bottom: 5px;
-            color: #666;
+            margin-bottom: 6px;
+            color: #495057;
+            font-weight: 500;
         }
 
         .property input,
         .property select {
             width: 100%;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
+            padding: 10px 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            background: white;
         }
 
-        /* Header */
+        .property input:focus,
+        .property select:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+
+        .property input[type="color"] {
+            height: 45px;
+            padding: 3px;
+        }
+
+        .property input[type="range"] {
+            padding: 0;
+        }
+
+        /* Header modernisé */
         .header {
             position: absolute;
             top: 0;
             left: 70px;
             right: 0;
-            height: 80px; /* Réduit de 100px à 80px */
-            background: white;
-            border-bottom: 1px solid #ccc;
-            padding: 8px 16px; /* Padding réduit */
+            height: 80px;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-bottom: 2px solid #e9ecef;
+            padding: 8px 16px;
             z-index: 100;
             display: flex;
             flex-direction: column;
-            gap: 6px; /* Gap réduit */
+            gap: 6px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
 
         .header-top,
         .header-bottom {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
         }
 
         .tool-group {
             display: flex;
             gap: 8px;
-            padding: 0 10px;
-            border-right: 1px solid #ddd;
+            padding: 0 12px;
+            border-right: 2px solid #e9ecef;
         }
 
         .tool-group:last-child {
@@ -220,114 +263,155 @@
 
         .btn {
             padding: 10px 20px;
-            background: #4CAF50;
+            background: linear-gradient(145deg, #4CAF50 0%, #45a049 100%);
             color: white;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(76, 175, 80, 0.3);
         }
 
         .btn:hover {
-            background: #45a049;
+            background: linear-gradient(145deg, #45a049 0%, #4CAF50 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
         }
 
         .btn-secondary {
-            background: #666;
+            background: linear-gradient(145deg, #6c757d 0%, #5a6268 100%);
+            box-shadow: 0 2px 6px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(145deg, #5a6268 0%, #6c757d 100%);
+            box-shadow: 0 4px 12px rgba(108, 117, 125, 0.4);
         }
 
         .btn-icon {
             padding: 10px;
-            background: #f0f0f0;
-            color: #333;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+            background: linear-gradient(145deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #495057;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 16px;
             width: 44px;
             height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .btn-icon:hover {
-            background: #e0e0e0;
-            border-color: #999;
+            background: linear-gradient(145deg, #e9ecef 0%, #dee2e6 100%);
+            border-color: #adb5bd;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
 
         .btn-icon:active {
-            background: #d0d0d0;
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .btn-icon:disabled {
             opacity: 0.5;
             cursor: not-allowed;
+            transform: none;
         }
 
         .btn-icon.active {
-            background: #4CAF50;
+            background: linear-gradient(145deg, #4CAF50 0%, #45a049 100%);
             color: white;
+            border-color: #45a049;
+            box-shadow: 0 2px 8px rgba(76, 175, 80, 0.4);
         }
 
-        /* Coordinates */
+        /* Coordonnées stylisées */
         .coordinates {
             position: absolute;
-            bottom: 10px;
-            left: 80px;
-            background: rgba(0,0,0,0.7);
+            bottom: 15px;
+            left: 85px;
+            background: rgba(44, 62, 80, 0.9);
             color: white;
-            padding: 8px 12px;
-            border-radius: 3px;
+            padding: 10px 15px;
+            border-radius: 20px;
             font-size: 14px;
+            font-weight: 500;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
-        /* Grid Toggle */
+        /* Grid Toggle stylisé */
         .grid-toggle {
             position: absolute;
-            bottom: 10px;
-            right: 20px;
-            background: white;
-            padding: 8px 12px;
-            border-radius: 3px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            bottom: 15px;
+            right: 25px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 18px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
         }
 
-        /* Properties Toggle */
-        .properties-toggle {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 101;
-            padding: 10px;
-            background: #4CAF50;
-            color: white;
-            border-radius: 4px;
+        .grid-toggle label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #495057;
             cursor: pointer;
         }
 
-        /* Rulers */
+        /* Properties Toggle animé */
+        .properties-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            z-index: 101;
+            padding: 12px;
+            background: linear-gradient(145deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .properties-toggle:hover {
+            transform: rotate(90deg) scale(1.1);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.6);
+        }
+
+        /* Rulers stylisés */
         .ruler-horizontal,
         .ruler-vertical {
             position: absolute;
-            background: #fff;
-            border: 1px solid #ccc;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border: 1px solid #dee2e6;
             font-size: 10px;
-            color: #666;
+            color: #6c757d;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
         .ruler-horizontal {
-            top: 80px; /* Ajusté pour le nouveau header */
+            top: 80px;
             left: 70px;
-            right: 250px; /* Ajusté pour les properties */
+            right: 250px;
             height: 20px;
             display: flex;
             align-items: center;
         }
 
         .ruler-vertical {
-            top: 100px; /* Ajusté */
+            top: 100px;
             left: 50px;
             bottom: 0;
             width: 20px;
@@ -339,39 +423,92 @@
 
         .ruler-mark {
             position: absolute;
-            border-left: 1px solid #999;
+            border-left: 1px solid #adb5bd;
             height: 100%;
         }
 
         .ruler-mark.major {
             border-left-width: 2px;
-            border-color: #666;
+            border-color: #6c757d;
         }
 
         .ruler-number {
             position: absolute;
             font-size: 9px;
-            color: #333;
+            color: #495057;
             transform: translateX(-50%);
             top: 2px;
+            font-weight: 500;
         }
 
-        /* Gomme */
+        /* Gomme stylisée */
         .eraser-size {
             position: absolute;
-            bottom: 60px;
-            left: 80px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            bottom: 70px;
+            left: 85px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(10px);
             display: none;
+            border: 2px solid #ff4444;
         }
 
         .eraser-size.show {
             display: block;
+            animation: slideUp 0.3s ease;
         }
 
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .eraser-size label {
+            font-weight: 600;
+            color: #dc3545;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        /* Panneau de redimensionnement */
+        .resize-info {
+            position: fixed;
+            top: 140px;
+            right: 25px;
+            background: rgba(44, 62, 80, 0.95);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 12px;
+            z-index: 1000;
+            border: 2px solid #FF9800;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            max-width: 280px;
+            display: none;
+        }
+
+        .resize-info.show {
+            display: block;
+            animation: slideInRight 0.3s ease;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .resize-info h4 {
+            color: #FF9800;
+            margin-bottom: 10px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        /* Responsive Design amélioré */
         @media (max-width: 768px) {
             .toolbar {
                 width: 60px;
@@ -379,38 +516,90 @@
             .tool-btn {
                 width: 50px;
                 height: 50px;
-                font-size: 12px;
+                font-size: 14px;
             }
             .header {
                 left: 60px;
                 padding: 6px;
-                height: 70px; /* Réduit pour mobile */
+                height: 70px;
             }
             .properties {
                 position: fixed;
                 top: 0;
                 right: 0;
                 height: 100%;
-                z-index: 100;
+                z-index: 1000;
                 transform: translateX(100%);
+                width: 280px;
             }
             .properties.active {
                 transform: translateX(0);
             }
             .canvas-area {
-                padding-top: 75px; /* Ajusté */
+                padding-top: 75px;
             }
             #drawingCanvas {
-                width: calc(100vw - 70px); /* Ajusté pour mobile */
-                height: calc(100vh - 85px); /* Maximisé pour mobile */
+                width: calc(100vw - 70px);
+                height: calc(100vh - 85px);
             }
             .ruler-horizontal,
             .ruler-vertical {
                 display: none;
             }
+            .coordinates {
+                left: 70px;
+                bottom: 10px;
+                font-size: 12px;
+                padding: 8px 12px;
+            }
+            .grid-toggle {
+                right: 15px;
+                bottom: 10px;
+                padding: 8px 12px;
+            }
+            .resize-info {
+                right: 15px;
+                top: 120px;
+                max-width: calc(100vw - 30px);
+            }
         }
 
-        /* Print styles */
+        @media (max-width: 480px) {
+            .header-bottom .tool-group {
+                flex-wrap: wrap;
+                gap: 4px;
+            }
+            .btn-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
+            }
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+            }
+        }
+
+        /* Animations et transitions */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .scale-in {
+            animation: scaleIn 0.3s ease-out;
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Print styles optimisés */
         @media print {
             body * {
                 visibility: hidden;
@@ -425,25 +614,64 @@
                 transform: none;
                 border: none;
                 box-shadow: none;
+                border-radius: 0;
             }
-            .toolbar, .properties, .header, .coordinates, .grid-toggle, .properties-toggle, .ruler-horizontal, .ruler-vertical, .eraser-size {
+            .toolbar, .properties, .header, .coordinates, .grid-toggle, 
+            .properties-toggle, .ruler-horizontal, .ruler-vertical, 
+            .eraser-size, .resize-info {
                 display: none !important;
             }
+        }
+
+        /* Tooltips */
+        [title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Scrollbar personnalisée */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, #4CAF50, #45a049);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, #45a049, #4CAF50);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Toolbar -->
+    <div class="container fade-in">
+        <!-- Toolbar avec outils architecturaux -->
         <div class="toolbar">
-            <button class="tool-btn active" data-tool="select" title="Sélectionner">↖</button>
-            <button class="tool-btn" data-tool="line" title="Ligne">╱</button>
+            <button class="tool-btn active" data-tool="select" title="Sélectionner (V)">↖</button>
+            <button class="tool-btn" data-tool="line" title="Ligne (L)">╱</button>
             <button class="tool-btn" data-tool="rectangle" title="Rectangle">▭</button>
             <button class="tool-btn" data-tool="circle" title="Cercle">○</button>
             <button class="tool-btn" data-tool="wall" title="Mur">▬</button>
             <button class="tool-btn" data-tool="door" title="Porte">🚪</button>
             <button class="tool-btn" data-tool="window" title="Fenêtre">⊞</button>
-            <button class="tool-btn" data-tool="text" title="Texte">T</button>
+            <button class="tool-btn" data-tool="text" title="Texte (T)">T</button>
             <button class="tool-btn" data-tool="stairs" title="Escalier">╬</button>
             <button class="tool-btn" data-tool="elevator" title="Ascenseur">▣</button>
             <button class="tool-btn" data-tool="technical" title="Espace technique">⚙</button>
@@ -452,31 +680,31 @@
             <button class="tool-btn" data-tool="bathroom" title="Salle de bain">🚿</button>
             <button class="tool-btn" data-tool="kitchen" title="Cuisine">☰</button>
             <button class="tool-btn" data-tool="tree" title="Arbre">🌳</button>
-            <button class="tool-btn" data-tool="erase" title="Gomme">🧽</button>
+            <button class="tool-btn" data-tool="erase" title="Gomme (E)">🧽</button>
         </div>
 
-        <!-- Canvas Area -->
+        <!-- Zone de dessin principale -->
         <div class="canvas-area">
             <div class="header">
                 <div class="header-top">
                     <div class="tool-group">
-                        <button class="btn" onclick="clearCanvas()">Nouveau</button>
-                        <button class="btn btn-secondary" onclick="saveDrawing()">Sauvegarder</button>
-                        <button class="btn btn-secondary" onclick="loadDrawing()">Charger</button>
-                        <button class="btn" onclick="exportImage()">Exporter PNG</button>
-                        <button class="btn" onclick="printDrawing()">Imprimer</button>
+                        <button class="btn" onclick="clearCanvas()" title="Nouveau dessin (Ctrl+N)">📄 Nouveau</button>
+                        <button class="btn btn-secondary" onclick="saveDrawing()" title="Sauvegarder (Ctrl+S)">💾 Sauvegarder</button>
+                        <button class="btn btn-secondary" onclick="loadDrawing()" title="Charger (Ctrl+O)">📁 Charger</button>
+                        <button class="btn" onclick="exportImage()" title="Exporter PNG (Ctrl+E)">🖼️ Export PNG</button>
+                        <button class="btn" onclick="printDrawing()" title="Imprimer (Ctrl+P)">🖨️ Imprimer</button>
                     </div>
                 </div>
                 <div class="header-bottom">
                     <div class="tool-group">
-                        <button class="btn-icon" onclick="undo()" title="Annuler" id="undoBtn">↶</button>
-                        <button class="btn-icon" onclick="redo()" title="Refaire" id="redoBtn">↷</button>
+                        <button class="btn-icon" onclick="undo()" title="Annuler (Ctrl+Z)" id="undoBtn">↶</button>
+                        <button class="btn-icon" onclick="redo()" title="Refaire (Ctrl+Y)" id="redoBtn">↷</button>
                     </div>
                     <div class="tool-group">
-                        <button class="btn-icon" onclick="copySelected()" title="Copier">📋</button>
-                        <button class="btn-icon" onclick="pasteSelected()" title="Coller">📄</button>
-                        <button class="btn-icon" onclick="duplicateSelected()" title="Dupliquer">⧉</button>
-                        <button class="btn-icon" onclick="deleteSelected()" title="Supprimer">🗑</button>
+                        <button class="btn-icon" onclick="copySelected()" title="Copier (Ctrl+C)">📋</button>
+                        <button class="btn-icon" onclick="pasteSelected()" title="Coller (Ctrl+V)">📄</button>
+                        <button class="btn-icon" onclick="duplicateSelected()" title="Dupliquer (Ctrl+D)">⧉</button>
+                        <button class="btn-icon" onclick="deleteSelected()" title="Supprimer (Delete)">🗑</button>
                     </div>
                     <div class="tool-group">
                         <button class="btn-icon" onclick="bringToFront()" title="Premier plan">⬆</button>
@@ -484,91 +712,119 @@
                     </div>
                     <div class="tool-group">
                         <button class="btn-icon" onclick="alignLeft()" title="Aligner à gauche">⇤</button>
-                        <button class="btn-icon" onclick="alignCenter()" title="Centrer">≡</button>
+                        <button class="btn-icon" onclick="alignCenter()" title="Centrer horizontalement">≡</button>
                         <button class="btn-icon" onclick="alignRight()" title="Aligner à droite">⇥</button>
                     </div>
                     <div class="tool-group">
                         <button class="btn-icon" onclick="rotateSelected(45)" title="Rotation +45°">↻</button>
                         <button class="btn-icon" onclick="rotateSelected(-45)" title="Rotation -45°">↺</button>
-                        <button class="btn-icon" onclick="rotateSelected(90)" title="Rotation 90°">⤴</button>
+                        <button class="btn-icon" onclick="rotateSelected(90)" title="Rotation 90° (R)">⤴</button>
                     </div>
                     <div class="tool-group">
                         <button class="btn-icon" onclick="zoomIn()" title="Zoom avant">🔍+</button>
                         <button class="btn-icon" onclick="zoomOut()" title="Zoom arrière">🔍-</button>
-                        <button class="btn-icon" onclick="zoomFit()" title="Ajuster">⊡</button>
+                        <button class="btn-icon" onclick="zoomFit()" title="Ajuster à l'écran">⊡</button>
                     </div>
                     <div class="tool-group">
-                        <button class="btn-icon" onclick="toggleGrid()" title="Grille" id="gridBtn">⊞</button>
-                        <button class="btn-icon" onclick="toggleSnap()" title="Magnétisme" id="snapBtn">🧲</button>
+                        <button class="btn-icon" onclick="toggleGrid()" title="Grille (G)" id="gridBtn">⊞</button>
+                        <button class="btn-icon" onclick="toggleSnap()" title="Magnétisme (S)" id="snapBtn">🧲</button>
                         <button class="btn-icon" onclick="toggleRuler()" title="Règles" id="rulerBtn">📏</button>
                     </div>
                 </div>
             </div>
             
-            <!-- Rulers -->
+            <!-- Règles graduées -->
             <div class="ruler-horizontal" id="rulerHorizontal" style="display: none;"></div>
             <div class="ruler-vertical" id="rulerVertical" style="display: none;"></div>
             
-            <canvas id="drawingCanvas"></canvas>
+            <!-- Canvas principal de dessin -->
+            <canvas id="drawingCanvas" class="scale-in"></canvas>
             
-            <div class="coordinates" id="coords">X: 0, Y: 0</div>
+            <!-- Affichage des coordonnées -->
+            <div class="coordinates" id="coords">📍 X: 0, Y: 0</div>
             
+            <!-- Contrôles de la gomme -->
             <div class="eraser-size" id="eraserSize">
-                <label>Taille de la gomme</label>
-                <input type="range" id="eraserSizeSlider" min="10" max="50" value="20">
-                <span id="eraserSizeValue">20</span>px
+                <label>🧽 Taille de la gomme</label>
+                <input type="range" id="eraserSizeSlider" min="10" max="50" value="20" style="width: 100%; margin: 8px 0;">
+                <div style="text-align: center; font-weight: bold; color: #dc3545;">
+                    <span id="eraserSizeValue">20</span>px
+                </div>
             </div>
             
+            <!-- Panneau d'information de redimensionnement -->
+            <div class="resize-info" id="resizeInfo">
+                <h4>📏 Redimensionnement en cours</h4>
+                <div id="resizeDetails" style="margin: 10px 0; font-size: 13px;"></div>
+                <hr style="margin: 10px 0; opacity: 0.3; border-color: #FF9800;">
+                <div style="font-size: 11px; color: #ccc; line-height: 1.5;">
+                    🟧 <strong>Poignées orange:</strong> Glissez pour redimensionner<br>
+                    ⌨️ <strong>Shift + glisser:</strong> Proportions verrouillées<br>
+                    🔲 <strong>Échap:</strong> Annuler l'opération
+                </div>
+            </div>
+            
+            <!-- Contrôles de la grille -->
             <div class="grid-toggle">
                 <label>
-                    <input type="checkbox" id="showGrid" checked> Afficher la grille
+                    <input type="checkbox" id="showGrid" checked style="margin-right: 8px;"> 
+                    ⊞ Afficher la grille
                 </label>
             </div>
             
-            <button class="properties-toggle" onclick="toggleProperties()">⚙</button>
+            <!-- Bouton d'ouverture du panneau de propriétés -->
+            <button class="properties-toggle" onclick="toggleProperties()" title="Ouvrir/Fermer les propriétés">⚙</button>
         </div>
 
-        <!-- Properties Panel -->
-        <div class="properties hidden">
-            <h2>Propriétés</h2>
+        <!-- Panneau de propriétés -->
+        <div class="properties hidden scale-in">
+            <h2 style="color: #2c3e50; margin-bottom: 20px; font-size: 18px; text-align: center;">
+                🎨 Propriétés ArchiDraw
+            </h2>
             
             <div class="property-group">
                 <h3>Trait</h3>
                 <div class="property">
-                    <label>Couleur</label>
+                    <label>🎨 Couleur du trait</label>
                     <input type="color" id="strokeColor" value="#000000">
                 </div>
                 <div class="property">
-                    <label>Épaisseur</label>
-                    <input type="range" id="strokeWidth" min="1" max="10" value="2">
-                    <span id="strokeWidthValue">2</span>
+                    <label>📏 Épaisseur du trait</label>
+                    <input type="range" id="strokeWidth" min="1" max="10" value="2" style="margin-bottom: 5px;">
+                    <div style="text-align: center; font-weight: bold; color: #4CAF50;">
+                        <span id="strokeWidthValue">2</span>px
+                    </div>
                 </div>
             </div>
 
             <div class="property-group">
                 <h3>Remplissage</h3>
                 <div class="property">
-                    <label>Couleur</label>
+                    <label>🎨 Couleur de remplissage</label>
                     <input type="color" id="fillColor" value="#ffffff">
                 </div>
                 <div class="property">
-                    <label>Remplir</label>
-                    <input type="checkbox" id="fillShape">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="fillShape" style="width: auto;">
+                        🔲 Activer le remplissage
+                    </label>
                 </div>
             </div>
 
             <div class="property-group">
                 <h3>Texte</h3>
                 <div class="property">
-                    <label>Taille</label>
+                    <label>📝 Taille de la police</label>
                     <input type="number" id="fontSize" value="16" min="10" max="72">
                 </div>
                 <div class="property">
-                    <label>Police</label>
+                    <label>🔤 Police de caractères</label>
                     <select id="fontFamily">
                         <option value="Arial">Arial</option>
-                        <option value="Times New Roman">Times</option>
-                        <option value="Courier New">Courier</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Verdana">Verdana</option>
                     </select>
                 </div>
             </div>
@@ -576,14 +832,59 @@
             <div class="property-group">
                 <h3>Grille</h3>
                 <div class="property">
-                    <label>Taille</label>
+                    <label>📐 Taille de la grille</label>
                     <input type="number" id="gridSize" value="20" min="10" max="50">
                 </div>
+            </div>
+
+            <!-- Panneau de dimensions de forme -->
+            <div class="property-group" id="shapeProperties" style="display: none;">
+                <h3>Dimensions de la forme</h3>
+                <div class="property">
+                    <label>📏 Largeur</label>
+                    <input type="number" id="shapeWidth" min="10" step="1" placeholder="Largeur en pixels">
+                </div>
+                <div class="property">
+                    <label>📏 Hauteur</label>
+                    <input type="number" id="shapeHeight" min="10" step="1" placeholder="Hauteur en pixels">
+                </div>
+                <div class="property">
+                    <label>📍 Position X</label>
+                    <input type="number" id="shapeX" step="1" placeholder="Position horizontale">
+                </div>
+                <div class="property">
+                    <label>📍 Position Y</label>
+                    <input type="number" id="shapeY" step="1" placeholder="Position verticale">
+                </div>
+                <div class="property" id="radiusProperty" style="display: none;">
+                    <label>⭕ Rayon</label>
+                    <input type="number" id="shapeRadius" min="5" step="1" placeholder="Rayon en pixels">
+                </div>
+                <button class="btn" onclick="applyShapeProperties()" 
+                        style="width: 100%; margin-top: 15px; background: linear-gradient(145deg, #FF9800 0%, #F57C00 100%); box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);">
+                    ✅ Appliquer les dimensions
+                </button>
+            </div>
+
+            <!-- Aide rapide -->
+            <div class="property-group" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-color: #2196f3;">
+                <h3 style="color: #1976d2;">💡 Aide rapide</h3>
+                <div style="font-size: 12px; line-height: 1.6; color: #1565c0;">
+                    <p><strong>🖱️ Sélection:</strong> Cliquez sur une forme</p>
+                    <p><strong>🟧 Redimensionner:</strong> Poignées orange</p>
+                    <p><strong>🔵 Rotation:</strong> Poignées bleues</p>
+                    <p><strong>⌨️ Raccourcis:</strong> V=Sélection, L=Ligne, T=Texte</p>
+                    <p><strong>🔲 Échap:</strong> Désélectionner</p>
+                </div>
+                <button onclick="window.showArchiDrawHelp && showArchiDrawHelp()" 
+                        style="width: 100%; margin-top: 10px; padding: 8px; border: none; background: #2196f3; color: white; border-radius: 4px; cursor: pointer;">
+                    📖 Aide complète
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Scripts JavaScript séparés -->
+    <!-- Scripts JavaScript modulaires -->
     <script src="variables.js"></script>
     <script src="drawing.js"></script>
     <script src="events-handlers.js"></script>
@@ -592,5 +893,88 @@
     <script src="eraser.js"></script>
     <script src="utils.js"></script>
     <script src="main.js"></script>
+
+    <!-- Script d'initialisation -->
+    <script>
+        // Animation de chargement
+        document.addEventListener('DOMContentLoaded', function() {
+            // Ajouter des effets visuels aux boutons
+            document.querySelectorAll('.tool-btn, .btn-icon').forEach(btn => {
+                btn.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px) scale(1.05)';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                });
+            });
+
+            // Effet de survol sur les propriétés
+            document.querySelectorAll('.property-group').forEach(group => {
+                group.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                    this.style.boxShadow = '0 4px 15px rgba(0,0,0,0.12)';
+                });
+                group.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                    this.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)';
+                });
+            });
+
+            // Message de bienvenue
+            console.log('🎨 ArchiDraw Pro - Plateforme de Dessin Architectural');
+            console.log('📐 Version avec redimensionnement intelligent');
+            console.log('🚀 Toutes les fonctionnalités activées !');
+        });
+
+        // Gestion des raccourcis globaux
+        document.addEventListener('keydown', function(e) {
+            // F1 pour l'aide
+            if (e.key === 'F1') {
+                e.preventDefault();
+                if (window.showArchiDrawHelp) {
+                    showArchiDrawHelp();
+                }
+            }
+            
+            // F11 pour le plein écran
+            if (e.key === 'F11') {
+                e.preventDefault();
+                if (window.toggleFullscreen) {
+                    toggleFullscreen();
+                }
+            }
+        });
+
+        // Notification de nouvelles fonctionnalités
+        setTimeout(() => {
+            if (shapes.length === 0) {
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #4CAF50, #45a049);
+                    color: white;
+                    padding: 15px 20px;
+                    border-radius: 8px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    z-index: 10000;
+                    font-size: 14px;
+                    max-width: 300px;
+                    animation: slideInRight 0.5s ease;
+                `;
+                notification.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 5px;">🎉 Nouveauté !</div>
+                    <div>Redimensionnement intelligent activé ! Sélectionnez une forme et utilisez les poignées orange.</div>
+                `;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutRight 0.5s ease forwards';
+                    setTimeout(() => notification.remove(), 500);
+                }, 4000);
+            }
+        }, 2000);
+    </script>
 </body>
 </html>
