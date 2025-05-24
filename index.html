@@ -9,7 +9,7 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            touch-action: none; /* Prevent default touch behaviors */
+            touch-action: none;
         }
 
         body {
@@ -60,6 +60,11 @@
             border-color: #45a049;
         }
 
+        .tool-btn.erase-mode {
+            background: #ff4444;
+            border-color: #cc0000;
+        }
+
         /* Canvas Area */
         .canvas-area {
             flex: 1;
@@ -82,6 +87,10 @@
             height: 700px;
             max-width: 90vw;
             max-height: 70vh;
+        }
+
+        .canvas-area.erase-mode #drawingCanvas {
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="red" opacity="0.3"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="12">✕</text></svg>') 12 12, auto;
         }
 
         /* Properties Panel */
@@ -210,6 +219,11 @@
             cursor: not-allowed;
         }
 
+        .btn-icon.active {
+            background: #4CAF50;
+            color: white;
+        }
+
         /* Coordinates */
         .coordinates {
             position: absolute;
@@ -246,6 +260,75 @@
             cursor: pointer;
         }
 
+        /* Rulers */
+        .ruler-horizontal,
+        .ruler-vertical {
+            position: absolute;
+            background: #fff;
+            border: 1px solid #ccc;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .ruler-horizontal {
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            max-width: 90vw;
+            height: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .ruler-vertical {
+            top: 50%;
+            left: calc(50% - 500px);
+            transform: translateY(-50%);
+            width: 20px;
+            height: 700px;
+            max-height: 70vh;
+            writing-mode: vertical-lr;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ruler-mark {
+            position: absolute;
+            border-left: 1px solid #999;
+            height: 100%;
+        }
+
+        .ruler-mark.major {
+            border-left-width: 2px;
+            border-color: #666;
+        }
+
+        .ruler-number {
+            position: absolute;
+            font-size: 9px;
+            color: #333;
+            transform: translateX(-50%);
+            top: 2px;
+        }
+
+        /* Gomme */
+        .eraser-size {
+            position: absolute;
+            bottom: 60px;
+            left: 80px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: none;
+        }
+
+        .eraser-size.show {
+            display: block;
+        }
+
         @media (max-width: 768px) {
             .toolbar {
                 width: 60px;
@@ -277,6 +360,31 @@
                 max-width: 95vw;
                 max-height: 60vh;
             }
+            .ruler-horizontal,
+            .ruler-vertical {
+                display: none;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #drawingCanvas, #drawingCanvas * {
+                visibility: visible;
+            }
+            #drawingCanvas {
+                position: fixed;
+                left: 0;
+                top: 0;
+                transform: none;
+                border: none;
+                box-shadow: none;
+            }
+            .toolbar, .properties, .header, .coordinates, .grid-toggle, .properties-toggle, .ruler-horizontal, .ruler-vertical, .eraser-size {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -289,7 +397,7 @@
             <button class="tool-btn" data-tool="rectangle" title="Rectangle">▭</button>
             <button class="tool-btn" data-tool="circle" title="Cercle">○</button>
             <button class="tool-btn" data-tool="wall" title="Mur">▬</button>
-            <button class="tool-btn" data-tool="door" title="Porte">⌒</button>
+            <button class="tool-btn" data-tool="door" title="Porte">🚪</button>
             <button class="tool-btn" data-tool="window" title="Fenêtre">⊞</button>
             <button class="tool-btn" data-tool="text" title="Texte">T</button>
             <button class="tool-btn" data-tool="stairs" title="Escalier">╬</button>
@@ -300,7 +408,7 @@
             <button class="tool-btn" data-tool="bathroom" title="Salle de bain">🚿</button>
             <button class="tool-btn" data-tool="kitchen" title="Cuisine">☰</button>
             <button class="tool-btn" data-tool="tree" title="Arbre">🌳</button>
-            <button class="tool-btn" data-tool="erase" title="Effacer">✕</button>
+            <button class="tool-btn" data-tool="erase" title="Gomme">🧽</button>
         </div>
 
         <!-- Canvas Area -->
@@ -336,21 +444,36 @@
                         <button class="btn-icon" onclick="alignRight()" title="Aligner à droite">⇥</button>
                     </div>
                     <div class="tool-group">
+                        <button class="btn-icon" onclick="rotateSelected(45)" title="Rotation +45°">↻</button>
+                        <button class="btn-icon" onclick="rotateSelected(-45)" title="Rotation -45°">↺</button>
+                        <button class="btn-icon" onclick="rotateSelected(90)" title="Rotation 90°">⤴</button>
+                    </div>
+                    <div class="tool-group">
                         <button class="btn-icon" onclick="zoomIn()" title="Zoom avant">🔍+</button>
                         <button class="btn-icon" onclick="zoomOut()" title="Zoom arrière">🔍-</button>
                         <button class="btn-icon" onclick="zoomFit()" title="Ajuster">⊡</button>
                     </div>
                     <div class="tool-group">
-                        <button class="btn-icon" onclick="toggleGrid()" title="Grille">⊞</button>
+                        <button class="btn-icon" onclick="toggleGrid()" title="Grille" id="gridBtn">⊞</button>
                         <button class="btn-icon" onclick="toggleSnap()" title="Magnétisme" id="snapBtn">🧲</button>
-                        <button class="btn-icon" onclick="toggleRuler()" title="Règles">📏</button>
+                        <button class="btn-icon" onclick="toggleRuler()" title="Règles" id="rulerBtn">📏</button>
                     </div>
                 </div>
             </div>
             
+            <!-- Rulers -->
+            <div class="ruler-horizontal" id="rulerHorizontal" style="display: none;"></div>
+            <div class="ruler-vertical" id="rulerVertical" style="display: none;"></div>
+            
             <canvas id="drawingCanvas"></canvas>
             
             <div class="coordinates" id="coords">X: 0, Y: 0</div>
+            
+            <div class="eraser-size" id="eraserSize">
+                <label>Taille de la gomme</label>
+                <input type="range" id="eraserSizeSlider" min="10" max="50" value="20">
+                <span id="eraserSizeValue">20</span>px
+            </div>
             
             <div class="grid-toggle">
                 <label>
@@ -416,1234 +539,13 @@
         </div>
     </div>
 
-    <script>
-        // Variables globales
-        const canvas = document.getElementById('drawingCanvas');
-        const ctx = canvas.getContext('2d');
-        let isDrawing = false;
-        let currentTool = 'select';
-        let startX = 0;
-        let startY = 0;
-        let shapes = [];
-        let selectedShape = null;
-        let tempShape = null;
-        let lastTap = 0;
-        let isPinching = false;
-        let initialPinchDistance = 0;
-        
-        // Historique pour undo/redo
-        let history = [];
-        let historyStep = -1;
-        
-        // Clipboard pour copier/coller
-        let clipboard = null;
-        
-        // Options
-        let showGrid = true;
-        let snapToGrid = false;
-        let showRuler = false;
-        let zoom = 1;
-        
-        // Dimension en cours
-        let dimensionStart = null;
-
-        // Initialisation
-        function init() {
-            // Set canvas size
-            canvas.width = Math.min(1000, window.innerWidth * 0.9);
-            canvas.height = Math.min(700, window.innerHeight * 0.7);
-
-            setupEventListeners();
-            saveHistory();
-            updateHistoryButtons();
-            drawGrid();
-            updateStrokeWidthDisplay();
-        }
-
-        // Configuration des événements
-        function setupEventListeners() {
-            // Outils
-            document.querySelectorAll('.tool-btn').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentTool = this.dataset.tool;
-                    canvas.style.cursor = currentTool === 'select' ? 'default' : 'crosshair';
-                });
-                btn.addEventListener('touchend', function(e) {
-                    e.preventDefault();
-                    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                    this.classList.add('active');
-                    currentTool = this.dataset.tool;
-                    canvas.style.cursor = currentTool === 'select' ? 'default' : 'crosshair';
-                });
-            });
-
-            // Canvas events
-            canvas.addEventListener('mousedown', handleMouseDown);
-            canvas.addEventListener('mousemove', handleMouseMove);
-            canvas.addEventListener('mouseup', handleMouseUp);
-            canvas.addEventListener('dblclick', handleDoubleClick);
-
-            canvas.addEventListener('touchstart', handleTouchStart);
-            canvas.addEventListener('touchmove', handleTouchMove);
-            canvas.addEventListener('touchend', handleTouchEnd);
-
-            // Properties
-            document.getElementById('strokeWidth').addEventListener('input', updateStrokeWidthDisplay);
-            document.getElementById('showGrid').addEventListener('change', redraw);
-            document.getElementById('gridSize').addEventListener('change', redraw);
-
-            // Keyboard
-            document.addEventListener('keydown', handleKeyDown);
-        }
-
-        // Touch handlers
-        function handleTouchStart(e) {
-            e.preventDefault();
-            const touches = e.changedTouches;
-            if (touches.length === 1) {
-                const rect = canvas.getBoundingClientRect();
-                let x = (touches[0].clientX - rect.left) / zoom;
-                let y = (touches[0].clientY - rect.top) / zoom;
-
-                // Snap to grid
-                if (snapToGrid) {
-                    const gridSize = parseInt(document.getElementById('gridSize').value);
-                    x = Math.round(x / gridSize) * gridSize;
-                    y = Math.round(y / gridSize) * gridSize;
-                }
-
-                // Double-tap detection
-                const currentTime = new Date().getTime();
-                const tapInterval = currentTime - lastTap;
-                if (tapInterval < 300 && tapInterval > 0) {
-                    handleDoubleTap({ clientX: touches[0].clientX, clientY: touches[0].clientY });
-                    lastTap = 0;
-                } else {
-                    lastTap = currentTime;
-                    startX = x;
-                    startY = y;
-                    isDrawing = true;
-
-                    if (currentTool === 'select') {
-                        selectShape(startX, startY);
-                    } else if (currentTool === 'erase') {
-                        eraseShape(startX, startY);
-                    } else if (currentTool === 'text') {
-                        addText(startX, startY);
-                    } else if (currentTool === 'dimension') {
-                        if (!dimensionStart) {
-                            dimensionStart = { x: startX, y: startY };
-                        } else {
-                            createDimension(dimensionStart.x, dimensionStart.y, startX, startY);
-                            dimensionStart = null;
-                        }
-                    }
-                }
-            } else if (touches.length === 2) {
-                isPinching = true;
-                const dx = touches[0].clientX - touches[1].clientX;
-                const dy = touches[0].clientY - touches[1].clientY;
-                initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
-            }
-        }
-
-        function handleTouchMove(e) {
-            e.preventDefault();
-            const touches = e.changedTouches;
-            if (touches.length === 1 && isDrawing && !isPinching) {
-                const rect = canvas.getBoundingClientRect();
-                let x = (touches[0].clientX - rect.left) / zoom;
-                let y = (touches[0].clientY - rect.top) / zoom;
-
-                if (snapToGrid) {
-                    const gridSize = parseInt(document.getElementById('gridSize').value);
-                    x = Math.round(x / gridSize) * gridSize;
-                    y = Math.round(y / gridSize) * gridSize;
-                }
-
-                document.getElementById('coords').textContent = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
-
-                if (currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
-                    redraw();
-                    drawTempShape(x, y);
-                }
-            } else if (touches.length === 2 && isPinching) {
-                const dx = touches[0].clientX - touches[1].clientX;
-                const dy = touches[0].clientY - touches[1].clientY;
-                const currentPinchDistance = Math.sqrt(dx * dx + dy * dy);
-                const zoomFactor = currentPinchDistance / initialPinchDistance;
-                zoom = Math.min(Math.max(zoom * zoomFactor, 0.3), 3);
-                initialPinchDistance = currentPinchDistance;
-                redraw();
-            }
-        }
-
-        function handleTouchEnd(e) {
-            e.preventDefault();
-            const touches = e.changedTouches;
-            if (touches.length === 1 && isDrawing && !isPinching) {
-                const rect = canvas.getBoundingClientRect();
-                let endX = (touches[0].clientX - rect.left) / zoom;
-                let endY = (touches[0].clientY - rect.top) / zoom;
-
-                if (snapToGrid) {
-                    const gridSize = parseInt(document.getElementById('gridSize').value);
-                    endX = Math.round(endX / gridSize) * gridSize;
-                    endY = Math.round(endY / gridSize) * gridSize;
-                }
-
-                if (currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
-                    createShape(endX, endY);
-                }
-
-                isDrawing = false;
-            }
-            isPinching = false;
-        }
-
-        // Mouse handlers
-        function handleMouseDown(e) {
-            if (e.type === 'mousedown') {
-                e.preventDefault();
-                const rect = canvas.getBoundingClientRect();
-                let x = (e.clientX - rect.left) / zoom;
-                let y = (e.clientY - rect.top) / zoom;
-
-                if (snapToGrid) {
-                    const gridSize = parseInt(document.getElementById('gridSize').value);
-                    x = Math.round(x / gridSize) * gridSize;
-                    y = Math.round(y / gridSize) * gridSize;
-                }
-
-                startX = x;
-                startY = y;
-                isDrawing = true;
-
-                if (currentTool === 'select') {
-                    selectShape(startX, startY);
-                } else if (currentTool === 'erase') {
-                    eraseShape(startX, startY);
-                } else if (currentTool === 'text') {
-                    addText(startX, startY);
-                } else if (currentTool === 'dimension') {
-                    if (!dimensionStart) {
-                        dimensionStart = { x: startX, y: startY };
-                    } else {
-                        createDimension(dimensionStart.x, dimensionStart.y, startX, startY);
-                        dimensionStart = null;
-                    }
-                }
-            }
-        }
-
-        function handleMouseMove(e) {
-            if (e.type === 'mousemove') {
-                const rect = canvas.getBoundingClientRect();
-                let x = (e.clientX - rect.left) / zoom;
-                let y = (e.clientY - rect.top) / zoom;
-
-                if (snapToGrid && isDrawing) {
-                    const gridSize = parseInt(document.getElementById('gridSize').value);
-                    x = Math.round(x / gridSize) * gridSize;
-                    y = Math.round(y / gridSize) * gridSize;
-                }
-
-                document.getElementById('coords').textContent = `X: ${Math.round(x)}, Y: ${Math.round(y)}`;
-
-                if (isDrawing && currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
-                    redraw();
-                    drawTempShape(x, y);
-                }
-            }
-        }
-
-        function handleMouseUp(e) {
-            if (e.type === 'mouseup' && isDrawing) {
-                const rect = canvas.getBoundingClientRect();
-                let endX = (e.clientX - rect.left) / zoom;
-                let endY = (e.clientY - rect.top) / zoom;
-
-                if (snapToGrid) {
-                    const gridSize = parseInt(document.getElementById('gridSize').value);
-                    endX = Math.round(endX / gridSize) * gridSize;
-                    endY = Math.round(endY / gridSize) * gridSize;
-                }
-
-                if (currentTool !== 'select' && currentTool !== 'erase' && currentTool !== 'text' && currentTool !== 'dimension') {
-                    createShape(endX, endY);
-                }
-
-                isDrawing = false;
-            }
-        }
-
-        function handleDoubleClick(e) {
-            if (currentTool === 'select' && selectedShape && selectedShape.type === 'text') {
-                const newText = prompt('Modifier le texte:', selectedShape.text);
-                if (newText !== null && newText.trim() !== '') {
-                    selectedShape.text = newText.trim();
-                    saveHistory();
-                    redraw();
-                }
-            }
-        }
-
-        function handleDoubleTap(e) {
-            if (currentTool === 'select') {
-                const rect = canvas.getBoundingClientRect();
-                const x = (e.clientX - rect.left) / zoom;
-                const y = (e.clientY - rect.top) / zoom;
-                selectShape(x, y);
-                if (selectedShape && selectedShape.type === 'text') {
-                    const newText = prompt('Modifier le texte:', selectedShape.text);
-                    if (newText !== null && newText.trim() !== '') {
-                        selectedShape.text = newText.trim();
-                        saveHistory();
-                        redraw();
-                    }
-                }
-            }
-        }
-
-        function handleKeyDown(e) {
-            if (e.key === 'Delete' && selectedShape) {
-                deleteSelected();
-            } else if (e.ctrlKey && e.key === 'z') {
-                e.preventDefault();
-                undo();
-            } else if (e.ctrlKey && e.key === 'y') {
-                e.preventDefault();
-                redo();
-            } else if (e.ctrlKey && e.key === 'c') {
-                e.preventDefault();
-                copySelected();
-            } else if (e.ctrlKey && e.key === 'v') {
-                e.preventDefault();
-                pasteSelected();
-            } else if (e.ctrlKey && e.key === 'd') {
-                e.preventDefault();
-                duplicateSelected();
-            }
-        }
-
-        // Shape creation
-        function createShape(endX, endY) {
-            const minSize = 20;
-            const shape = {
-                type: currentTool,
-                startX: startX,
-                startY: startY,
-                endX: endX,
-                endY: endY,
-                strokeColor: document.getElementById('strokeColor').value,
-                strokeWidth: parseInt(document.getElementById('strokeWidth').value),
-                fillColor: document.getElementById('fillColor').value,
-                fill: document.getElementById('fillShape').checked
-            };
-
-            if (currentTool === 'circle') {
-                shape.radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-            } else if (['rectangle', 'stairs', 'elevator', 'technical', 'furniture', 'bathroom', 'kitchen'].includes(currentTool)) {
-                shape.endX = startX + Math.max(Math.abs(endX - startX), minSize) * Math.sign(endX - startX);
-                shape.endY = startY + Math.max(Math.abs(endY - startY), minSize) * Math.sign(endY - startY);
-            }
-
-            shapes.push(shape);
-            saveHistory();
-            redraw();
-        }
-
-        // Créer une cotation
-        function createDimension(x1, y1, x2, y2) {
-            const distance = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-            const shape = {
-                type: 'dimension',
-                startX: x1,
-                startY: y1,
-                endX: x2,
-                endY: y2,
-                distance: Math.round(distance),
-                strokeColor: '#ff0000',
-                fontSize: 12
-            };
-            shapes.push(shape);
-            saveHistory();
-            redraw();
-        }
-
-        // Text handling
-        function addText(x, y) {
-            const text = prompt('Entrez le texte:');
-            if (text && text.trim() !== '') {
-                shapes.push({
-                    type: 'text',
-                    x: x,
-                    y: y,
-                    text: text.trim(),
-                    fontSize: parseInt(document.getElementById('fontSize').value),
-                    fontFamily: document.getElementById('fontFamily').value,
-                    fillColor: document.getElementById('strokeColor').value
-                });
-                saveHistory();
-                redraw();
-            }
-        }
-
-        // Selection
-        function selectShape(x, y) {
-            selectedShape = null;
-            for (let i = shapes.length - 1; i >= 0; i--) {
-                if (isPointInShape(x, y, shapes[i])) {
-                    selectedShape = shapes[i];
-                    break;
-                }
-            }
-            redraw();
-        }
-
-        function isPointInShape(x, y, shape) {
-            switch (shape.type) {
-                case 'line':
-                case 'wall':
-                    return isPointNearLine(x, y, shape.startX, shape.startY, shape.endX, shape.endY, 5);
-                case 'rectangle':
-                case 'window':
-                case 'stairs':
-                case 'elevator':
-                case 'technical':
-                case 'furniture':
-                case 'bathroom':
-                case 'kitchen':
-                    const minX = Math.min(shape.startX, shape.endX);
-                    const minY = Math.min(shape.startY, shape.endY);
-                    const maxX = Math.max(shape.startX, shape.endX);
-                    const maxY = Math.max(shape.startY, shape.endY);
-                    return x >= minX && x <= maxX && y >= minY && y <= maxY;
-                case 'circle':
-                    const dx = x - shape.startX;
-                    const dy = y - shape.startY;
-                    return Math.sqrt(dx * dx + dy * dy) <= shape.radius;
-                case 'door':
-                    return Math.abs(x - shape.startX) < 40 && Math.abs(y - shape.startY) < 40;
-                case 'dimension':
-                    return isPointNearLine(x, y, shape.startX, shape.startY, shape.endX, shape.endY, 10);
-                case 'tree':
-                    const treeX = (shape.startX + shape.endX) / 2;
-                    const treeY = (shape.startY + shape.endY) / 2;
-                    const treeRadius = Math.min(Math.abs(shape.endX - shape.startX), Math.abs(shape.endY - shape.startY)) / 2;
-                    return Math.sqrt(Math.pow(x - treeX, 2) + Math.pow(y - treeY, 2)) <= treeRadius;
-                case 'text':
-                    ctx.font = `${shape.fontSize * zoom}px ${shape.fontFamily}`;
-                    const metrics = ctx.measureText(shape.text);
-                    return x >= shape.x && x <= shape.x + metrics.width / zoom &&
-                           y >= shape.y - shape.fontSize && y <= shape.y;
-            }
-            return false;
-        }
-
-        function isPointNearLine(px, py, x1, y1, x2, y2, threshold) {
-            const A = px - x1;
-            const B = py - y1;
-            const C = x2 - x1;
-            const D = y2 - y1;
-
-            const dot = A * C + B * D;
-            const lenSq = C * C + D * D;
-            let param = -1;
-            if (lenSq !== 0) param = dot / lenSq;
-
-            let xx, yy;
-
-            if (param < 0) {
-                xx = x1;
-                yy = y1;
-            } else if (param > 1) {
-                xx = x2;
-                yy = y2;
-            } else {
-                xx = x1 + param * C;
-                yy = y1 + param * D;
-            }
-
-            const dx = px - xx;
-            const dy = py - yy;
-            return Math.sqrt(dx * dx + dy * dy) < threshold;
-        }
-
-        // Erase
-        function eraseShape(x, y) {
-            for (let i = shapes.length - 1; i >= 0; i--) {
-                if (isPointInShape(x, y, shapes[i])) {
-                    shapes.splice(i, 1);
-                    saveHistory();
-                    redraw();
-                    break;
-                }
-            }
-        }
-
-        // Drawing functions
-        function redraw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.save();
-            ctx.scale(zoom, zoom);
-            
-            if (document.getElementById('showGrid').checked) {
-                drawGrid();
-            }
-
-            shapes.forEach(shape => drawShape(shape));
-
-            if (selectedShape) {
-                highlightShape(selectedShape);
-            }
-            
-            ctx.restore();
-        }
-
-        function drawGrid() {
-            const gridSize = parseInt(document.getElementById('gridSize').value);
-            ctx.save();
-            ctx.strokeStyle = '#e0e0e0';
-            ctx.lineWidth = 0.5 / zoom;
-
-            for (let x = 0; x <= canvas.width / zoom; x += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(x, 0);
-                ctx.lineTo(x, canvas.height / zoom);
-                ctx.stroke();
-            }
-
-            for (let y = 0; y <= canvas.height / zoom; y += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(canvas.width / zoom, y);
-                ctx.stroke();
-            }
-
-            ctx.restore();
-        }
-
-        function drawShape(shape) {
-            ctx.save();
-            ctx.strokeStyle = shape.strokeColor || '#000';
-            ctx.lineWidth = (shape.strokeWidth || 2) / zoom;
-            ctx.fillStyle = shape.fillColor || '#fff';
-
-            switch (shape.type) {
-                case 'line':
-                    ctx.beginPath();
-                    ctx.moveTo(shape.startX, shape.startY);
-                    ctx.lineTo(shape.endX, shape.endY);
-                    ctx.stroke();
-                    break;
-
-                case 'rectangle':
-                    const rectWidth = shape.endX - shape.startX;
-                    const rectHeight = shape.endY - shape.startY;
-                    if (shape.fill) {
-                        ctx.fillRect(shape.startX, shape.startY, rectWidth, rectHeight);
-                    }
-                    ctx.strokeRect(shape.startX, shape.startY, rectWidth, rectHeight);
-                    break;
-
-                case 'circle':
-                    ctx.beginPath();
-                    ctx.arc(shape.startX, shape.startY, shape.radius, 0, 2 * Math.PI);
-                    if (shape.fill) {
-                        ctx.fill();
-                    }
-                    ctx.stroke();
-                    break;
-
-                case 'wall':
-                    ctx.lineWidth = 10 / zoom;
-                    ctx.beginPath();
-                    ctx.moveTo(shape.startX, shape.startY);
-                    ctx.lineTo(shape.endX, shape.endY);
-                    ctx.stroke();
-                    break;
-
-                case 'door':
-                    ctx.beginPath();
-                    ctx.arc(shape.startX, shape.startY, 40, 0, Math.PI / 2);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(shape.startX, shape.startY);
-                    ctx.lineTo(shape.startX + 40, shape.startY);
-                    ctx.stroke();
-                    break;
-
-                case 'window':
-                    const winWidth = Math.abs(shape.endX - shape.startX);
-                    const winHeight = 15;
-                    const winX = Math.min(shape.startX, shape.endX);
-                    const winY = Math.min(shape.startY, shape.endY);
-                    
-                    ctx.fillStyle = '#cce6ff';
-                    ctx.fillRect(winX, winY, winWidth, winHeight);
-                    ctx.strokeRect(winX, winY, winWidth, winHeight);
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(winX + winWidth/2, winY);
-                    ctx.lineTo(winX + winWidth/2, winY + winHeight);
-                    ctx.stroke();
-                    break;
-
-                case 'stairs':
-                    const stairsWidth = Math.abs(shape.endX - shape.startX);
-                    const stairsHeight = Math.abs(shape.endY - shape.startY);
-                    const stairsX = Math.min(shape.startX, shape.endX);
-                    const stairsY = Math.min(shape.startY, shape.endY);
-                    
-                    ctx.strokeRect(stairsX, stairsY, stairsWidth, stairsHeight);
-                    
-                    const numSteps = 8;
-                    const stepHeight = stairsHeight / numSteps;
-                    
-                    for (let i = 0; i < numSteps; i++) {
-                        ctx.beginPath();
-                        ctx.moveTo(stairsX, stairsY + i * stepHeight);
-                        ctx.lineTo(stairsX + stairsWidth, stairsY + i * stepHeight);
-                        ctx.stroke();
-                    }
-                    
-                    ctx.save();
-                    ctx.strokeStyle = shape.strokeColor;
-                    ctx.lineWidth = 2 / zoom;
-                    ctx.beginPath();
-                    ctx.moveTo(stairsX + stairsWidth/2, stairsY + 10);
-                    ctx.lineTo(stairsX + stairsWidth/2, stairsY + stairsHeight - 10);
-                    ctx.stroke();
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(stairsX + stairsWidth/2 - 8, stairsY + stairsHeight - 20);
-                    ctx.lineTo(stairsX + stairsWidth/2, stairsY + stairsHeight - 10);
-                    ctx.lineTo(stairsX + stairsWidth/2 + 8, stairsY + stairsHeight - 20);
-                    ctx.stroke();
-                    ctx.restore();
-                    break;
-
-                case 'elevator':
-                    const elevWidth = Math.abs(shape.endX - shape.startX);
-                    const elevHeight = Math.abs(shape.endY - shape.startY);
-                    const elevX = Math.min(shape.startX, shape.endX);
-                    const elevY = Math.min(shape.startY, shape.endY);
-                    
-                    ctx.fillStyle = '#f0f0f0';
-                    ctx.fillRect(elevX, elevY, elevWidth, elevHeight);
-                    ctx.strokeRect(elevX, elevY, elevWidth, elevHeight);
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(elevX + elevWidth/2 - 2, elevY);
-                    ctx.lineTo(elevX + elevWidth/2 - 2, elevY + elevHeight);
-                    ctx.moveTo(elevX + elevWidth/2 + 2, elevY);
-                    ctx.lineTo(elevX + elevWidth/2 + 2, elevY + elevHeight);
-                    ctx.stroke();
-                    
-                    ctx.save();
-                    ctx.strokeStyle = '#999';
-                    ctx.lineWidth = 1 / zoom;
-                    ctx.beginPath();
-                    ctx.moveTo(elevX + 5, elevY + 5);
-                    ctx.lineTo(elevX + elevWidth - 5, elevY + elevHeight - 5);
-                    ctx.moveTo(elevX + elevWidth - 5, elevY + 5);
-                    ctx.lineTo(elevX + 5, elevY + elevHeight - 5);
-                    ctx.stroke();
-                    ctx.restore();
-                    break;
-
-                case 'technical':
-                    const techWidth = Math.abs(shape.endX - shape.startX);
-                    const techHeight = Math.abs(shape.endY - shape.startY);
-                    const techX = Math.min(shape.startX, shape.endX);
-                    const techY = Math.min(shape.startY, shape.endY);
-                    
-                    ctx.fillStyle = '#e8e8e8';
-                    ctx.fillRect(techX, techY, techWidth, techHeight);
-                    ctx.strokeRect(techX, techY, techWidth, techHeight);
-                    
-                    ctx.save();
-                    ctx.beginPath();
-                    ctx.rect(techX, techY, techWidth, techHeight);
-                    ctx.clip();
-                    ctx.strokeStyle = '#666';
-                    ctx.lineWidth = 1 / zoom;
-                    const spacing = Math.min(techWidth, techHeight) / 10;
-                    
-                    for (let i = -techHeight; i < techWidth + techHeight; i += spacing) {
-                        ctx.beginPath();
-                        ctx.moveTo(techX + i, techY);
-                        ctx.lineTo(techX + i + techHeight, techY + techHeight);
-                        ctx.stroke();
-                    }
-                    ctx.restore();
-                    
-                    ctx.fillStyle = '#333';
-                    ctx.font = `bold ${12 * zoom}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText('TECH', techX + techWidth/2, techY + techHeight/2);
-                    break;
-
-                case 'dimension':
-                    ctx.save();
-                    ctx.strokeStyle = shape.strokeColor || '#ff0000';
-                    ctx.lineWidth = 1 / zoom;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(shape.startX, shape.startY);
-                    ctx.lineTo(shape.endX, shape.endY);
-                    ctx.stroke();
-                    
-                    const angle = Math.atan2(shape.endY - shape.startY, shape.endX - shape.startX);
-                    const arrowLength = 10;
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(shape.startX, shape.startY);
-                    ctx.lineTo(shape.startX + arrowLength * Math.cos(angle + 2.5), 
-                              shape.startY + arrowLength * Math.sin(angle + 2.5));
-                    ctx.moveTo(shape.startX, shape.startY);
-                    ctx.lineTo(shape.startX + arrowLength * Math.cos(angle - 2.5), 
-                              shape.startY + arrowLength * Math.sin(angle - 2.5));
-                    ctx.stroke();
-                    
-                    ctx.beginPath();
-                    ctx.moveTo(shape.endX, shape.endY);
-                    ctx.lineTo(shape.endX - arrowLength * Math.cos(angle - 2.5), 
-                              shape.endY - arrowLength * Math.sin(angle - 2.5));
-                    ctx.moveTo(shape.endX, shape.endY);
-                    ctx.lineTo(shape.endX - arrowLength * Math.cos(angle + 2.5), 
-                              shape.endY - arrowLength * Math.sin(angle + 2.5));
-                    ctx.stroke();
-                    
-                    const midX = (shape.startX + shape.endX) / 2;
-                    const midY = (shape.startY + shape.endY) / 2;
-                    ctx.fillStyle = shape.strokeColor || '#ff0000';
-                    ctx.font = `${(shape.fontSize || 12) * zoom}px Arial`;
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'bottom';
-                    ctx.save();
-                    ctx.translate(midX, midY);
-                    ctx.rotate(angle);
-                    ctx.fillText(`${shape.distance}px`, 0, -5);
-                    ctx.restore();
-                    break;
-
-                case 'furniture':
-                    const furWidth = Math.abs(shape.endX - shape.startX);
-                    const furHeight = Math.abs(shape.endY - shape.startY);
-                    const furX = Math.min(shape.startX, shape.endX);
-                    const furY = Math.min(shape.startY, shape.endY);
-                    
-                    ctx.fillStyle = '#8B4513';
-                    ctx.fillRect(furX, furY, furWidth, furHeight);
-                    ctx.strokeRect(furX, furY, furWidth, furHeight);
-                    
-                    ctx.strokeStyle = '#666';
-                    ctx.strokeRect(furX + 5, furY + 5, furWidth - 10, furHeight - 10);
-                    break;
-
-                case 'bathroom':
-                    const bathWidth = Math.abs(shape.endX - shape.startX);
-                    const bathHeight = Math.abs(shape.endY - shape.startY);
-                    const bathX = Math.min(shape.startX, shape.endX);
-                    const bathY = Math.min(shape.startY, shape.endY);
-                    
-                    ctx.fillStyle = '#E6F3FF';
-                    ctx.fillRect(bathX, bathY, bathWidth, bathHeight);
-                    ctx.strokeRect(bathX, bathY, bathWidth, bathHeight);
-                    
-                    ctx.strokeStyle = '#666';
-                    ctx.strokeRect(bathX + 5, bathY + 5, bathWidth - 10, bathHeight - 10);
-                    
-                    ctx.beginPath();
-                    ctx.arc(bathX + bathWidth/2, bathY + 10, 5, 0, 2 * Math.PI);
-                    ctx.fillStyle = '#666';
-                    ctx.fill();
-                    ctx.stroke();
-                    break;
-
-                case 'kitchen':
-                    const kitWidth = Math.abs(shape.endX - shape.startX);
-                    const kitHeight = Math.abs(shape.endY - shape.startY);
-                    const kitX = Math.min(shape.startX, shape.endX);
-                    const kitY = Math.min(shape.startY, shape.endY);
-                    
-                    ctx.fillStyle = '#D3D3D3';
-                    ctx.fillRect(kitX, kitY, kitWidth, kitHeight);
-                    ctx.strokeRect(kitX, kitY, kitWidth, kitHeight);
-                    
-                    ctx.strokeStyle = '#666';
-                    const plateSize = Math.min(kitWidth, kitHeight) / 3;
-                    for (let i = 0; i < 2; i++) {
-                        for (let j = 0; j < 2; j++) {
-                            ctx.beginPath();
-                            ctx.arc(kitX + plateSize * (i + 0.5) + 10, 
-                                   kitY + plateSize * (j + 0.5) + 10, 
-                                   plateSize/3, 0, 2 * Math.PI);
-                            ctx.stroke();
-                        }
-                    }
-                    break;
-
-                case 'tree':
-                    const treeX = (shape.startX + shape.endX) / 2;
-                    const treeY = (shape.startY + shape.endY) / 2;
-                    const treeRadius = Math.min(Math.abs(shape.endX - shape.startX), 
-                                               Math.abs(shape.endY - shape.startY)) / 2;
-                    
-                    ctx.fillStyle = '#228B22';
-                    ctx.beginPath();
-                    ctx.arc(treeX, treeY, treeRadius, 0, 2 * Math.PI);
-                    ctx.fill();
-                    ctx.stroke();
-                    
-                    ctx.fillStyle = '#006400';
-                    for (let i = 0; i < 5; i++) {
-                        const angle = (Math.PI * 2 / 5) * i;
-                        const x = treeX + Math.cos(angle) * treeRadius * 0.6;
-                        const y = treeY + Math.sin(angle) * treeRadius * 0.6;
-                        ctx.beginPath();
-                        ctx.arc(x, y, treeRadius * 0.3, 0, 2 * Math.PI);
-                        ctx.fill();
-                    }
-                    break;
-
-                case 'text':
-                    ctx.font = `${shape.fontSize * zoom}px ${shape.fontFamily || 'Arial'}`;
-                    ctx.fillStyle = shape.fillColor || '#000';
-                    ctx.textAlign = 'left';
-                    ctx.textBaseline = 'top';
-                    ctx.fillText(shape.text, shape.x, shape.y);
-                    break;
-            }
-
-            ctx.restore();
-        }
-
-        function drawTempShape(x, y) {
-            ctx.save();
-            ctx.strokeStyle = '#666';
-            ctx.lineWidth = 1 / zoom;
-            ctx.setLineDash([5, 5]);
-
-            switch (currentTool) {
-                case 'line':
-                case 'wall':
-                    ctx.beginPath();
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                    break;
-
-                case 'rectangle':
-                case 'window':
-                case 'stairs':
-                case 'elevator':
-                case 'technical':
-                case 'furniture':
-                case 'bathroom':
-                case 'kitchen':
-                    ctx.strokeRect(startX, startY, x - startX, y - startY);
-                    break;
-
-                case 'dimension':
-                    ctx.beginPath();
-                    ctx.moveTo(startX, startY);
-                    ctx.lineTo(x, y);
-                    ctx.stroke();
-                    break;
-
-                case 'tree':
-                    const radius = Math.min(Math.abs(x - startX), Math.abs(y - startY)) / 2;
-                    ctx.beginPath();
-                    ctx.arc((startX + x) / 2, (startY + y) / 2, radius, 0, 2 * Math.PI);
-                    ctx.stroke();
-                    break;
-
-                case 'circle':
-                    const circleRadius = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
-                    ctx.beginPath();
-                    ctx.arc(startX, startY, circleRadius, 0, 2 * Math.PI);
-                    ctx.stroke();
-                    break;
-
-                case 'door':
-                    ctx.beginPath();
-                    ctx.arc(startX, startY, 40, 0, Math.PI / 2);
-                    ctx.stroke();
-                    break;
-            }
-
-            ctx.restore();
-        }
-
-        function highlightShape(shape) {
-            ctx.save();
-            ctx.strokeStyle = '#4CAF50';
-            ctx.lineWidth = 3 / zoom;
-            ctx.setLineDash([5, 5]);
-
-            switch (shape.type) {
-                case 'line':
-                case 'wall':
-                    ctx.beginPath();
-                    ctx.moveTo(shape.startX, shape.startY);
-                    ctx.lineTo(shape.endX, shape.endY);
-                    ctx.stroke();
-                    break;
-
-                case 'rectangle':
-                case 'window':
-                case 'stairs':
-                case 'elevator':
-                case 'technical':
-                case 'furniture':
-                case 'bathroom':
-                case 'kitchen':
-                    const width = shape.endX - shape.startX;
-                    const height = shape.endY - shape.startY;
-                    ctx.strokeRect(shape.startX - 2/zoom, shape.startY - 2/zoom, width + 4/zoom, height + 4/zoom);
-                    break;
-
-                case 'circle':
-                    ctx.beginPath();
-                    ctx.arc(shape.startX, shape.startY, shape.radius + 2/zoom, 0, 2 * Math.PI);
-                    ctx.stroke();
-                    break;
-
-                case 'door':
-                    ctx.beginPath();
-                    ctx.arc(shape.startX, shape.startY, 42, 0, Math.PI / 2);
-                    ctx.stroke();
-                    break;
-
-                case 'dimension':
-                    ctx.beginPath();
-                    ctx.moveTo(shape.startX - 5/zoom, shape.startY - 5/zoom);
-                    ctx.lineTo(shape.endX + 5/zoom, shape.endY + 5/zoom);
-                    ctx.stroke();
-                    break;
-
-                case 'tree':
-                    const treeRadius = Math.min(Math.abs(shape.endX - shape.startX), 
-                                               Math.abs(shape.endY - shape.startY)) / 2;
-                    ctx.beginPath();
-                    ctx.arc((shape.startX + shape.endX) / 2, (shape.startY + shape.endY) / 2, 
-                           treeRadius + 5/zoom, 0, 2 * Math.PI);
-                    ctx.stroke();
-                    break;
-
-                case 'text':
-                    ctx.font = `${shape.fontSize * zoom}px ${shape.fontFamily}`;
-                    const metrics = ctx.measureText(shape.text);
-                    ctx.strokeRect(shape.x - 2/zoom, shape.y - shape.fontSize - 2/zoom, 
-                                 metrics.width / zoom + 4/zoom, shape.fontSize + 4/zoom);
-                    break;
-            }
-
-            ctx.restore();
-        }
-
-        // Historique (Undo/Redo)
-        function saveHistory() {
-            historyStep++;
-            if (historyStep < history.length) {
-                history.length = historyStep;
-            }
-            history.push(JSON.parse(JSON.stringify(shapes)));
-            updateHistoryButtons();
-        }
-
-        function undo() {
-            if (historyStep > 0) {
-                historyStep--;
-                shapes = JSON.parse(JSON.stringify(history[historyStep]));
-                selectedShape = null;
-                redraw();
-                updateHistoryButtons();
-            }
-        }
-
-        function redo() {
-            if (historyStep < history.length - 1) {
-                historyStep++;
-                shapes = JSON.parse(JSON.stringify(history[historyStep]));
-                selectedShape = null;
-                redraw();
-                updateHistoryButtons();
-            }
-        }
-
-        function updateHistoryButtons() {
-            document.getElementById('undoBtn').disabled = historyStep <= 0;
-            document.getElementById('redoBtn').disabled = historyStep >= history.length - 1;
-        }
-
-        // Copier/Coller/Dupliquer
-        function copySelected() {
-            if (selectedShape) {
-                clipboard = JSON.parse(JSON.stringify(selectedShape));
-                alert('Élément copié !');
-            }
-        }
-
-        function pasteSelected() {
-            if (clipboard) {
-                const newShape = JSON.parse(JSON.stringify(clipboard));
-                newShape.startX = (newShape.startX || 0) + 20;
-                newShape.startY = (newShape.startY || 0) + 20;
-                if (newShape.endX !== undefined) newShape.endX += 20;
-                if (newShape.endY !== undefined) newShape.endY += 20;
-                if (newShape.x !== undefined) newShape.x += 20;
-                if (newShape.y !== undefined) newShape.y += 20;
-                shapes.push(newShape);
-                saveHistory();
-                redraw();
-            }
-        }
-
-        function duplicateSelected() {
-            if (selectedShape) {
-                const newShape = JSON.parse(JSON.stringify(selectedShape));
-                newShape.startX = (newShape.startX || 0) + 20;
-                newShape.startY = (newShape.startY || 0) + 20;
-                if (newShape.endX !== undefined) newShape.endX += 20;
-                if (newShape.endY !== undefined) newShape.endY += 20;
-                if (newShape.x !== undefined) newShape.x += 20;
-                if (newShape.y !== undefined) newShape.y += 20;
-                shapes.push(newShape);
-                selectedShape = newShape;
-                saveHistory();
-                redraw();
-            }
-        }
-
-        function deleteSelected() {
-            if (selectedShape) {
-                shapes = shapes.filter(s => s !== selectedShape);
-                selectedShape = null;
-                saveHistory();
-                redraw();
-            }
-        }
-
-        // Arrangement
-        function bringToFront() {
-            if (selectedShape) {
-                const index = shapes.indexOf(selectedShape);
-                if (index > -1) {
-                    shapes.splice(index, 1);
-                    shapes.push(selectedShape);
-                    saveHistory();
-                    redraw();
-                }
-            }
-        }
-
-        function sendToBack() {
-            if (selectedShape) {
-                const index = shapes.indexOf(selectedShape);
-                if (index > -1) {
-                    shapes.splice(index, 1);
-                    shapes.unshift(selectedShape);
-                    saveHistory();
-                    redraw();
-                }
-            }
-        }
-
-        // Alignement
-        function alignLeft() {
-            if (selectedShape && shapes.length > 1) {
-                const minX = Math.min(...shapes.map(s => s.startX || s.x || 0));
-                if (selectedShape.startX !== undefined) {
-                    const diff = selectedShape.startX - minX;
-                    selectedShape.startX = minX;
-                    if (selectedShape.endX !== undefined) selectedShape.endX -= diff;
-                } else if (selectedShape.x !== undefined) {
-                    selectedShape.x = minX;
-                }
-                saveHistory();
-                redraw();
-            }
-        }
-
-        function alignCenter() {
-            if (selectedShape && shapes.length > 1) {
-                const avgX = shapes.reduce((acc, s) => acc + (s.startX || s.x || 0), 0) / shapes.length;
-                if (selectedShape.startX !== undefined) {
-                    const width = (selectedShape.endX || selectedShape.startX) - selectedShape.startX;
-                    const center = selectedShape.startX + width / 2;
-                    const diff = center - avgX;
-                    selectedShape.startX -= diff;
-                    if (selectedShape.endX !== undefined) selectedShape.endX -= diff;
-                } else if (selectedShape.x !== undefined) {
-                    selectedShape.x = avgX;
-                }
-                saveHistory();
-                redraw();
-            }
-        }
-
-        function alignRight() {
-            if (selectedShape && shapes.length > 1) {
-                const maxX = Math.max(...shapes.map(s => s.endX || s.startX || s.x || 0));
-                if (selectedShape.endX !== undefined) {
-                    const diff = selectedShape.endX - maxX;
-                    selectedShape.endX = maxX;
-                    if (selectedShape.startX !== undefined) selectedShape.startX -= diff;
-                } else if (selectedShape.x !== undefined) {
-                    selectedShape.x = maxX;
-                }
-                saveHistory();
-                redraw();
-            }
-        }
-
-        // Zoom
-        function zoomIn() {
-            zoom = Math.min(zoom * 1.2, 3);
-            redraw();
-        }
-
-        function zoomOut() {
-            zoom = Math.max(zoom * 0.8, 0.3);
-            redraw();
-        }
-
-        function zoomFit() {
-            zoom = 1;
-            redraw();
-        }
-
-        // Options
-        function toggleGrid() {
-            document.getElementById('showGrid').checked = !document.getElementById('showGrid').checked;
-            redraw();
-        }
-
-        function toggleSnap() {
-            snapToGrid = !snapToGrid;
-            document.getElementById('snapBtn').style.background = snapToGrid ? '#4CAF50' : '#f0f0f0';
-        }
-
-        function toggleRuler() {
-            showRuler = !showRuler;
-            alert('Fonction règles en développement');
-        }
-
-        function toggleProperties() {
-            const properties = document.querySelector('.properties');
-            properties.classList.toggle('hidden');
-            properties.classList.toggle('active');
-        }
-
-        // Export image
-        function exportImage() {
-            const link = document.createElement('a');
-            link.download = 'plan_architectural.png';
-            link.href = canvas.toDataURL();
-            link.click();
-        }
-
-        // Utility functions
-        function updateStrokeWidthDisplay() {
-            document.getElementById('strokeWidthValue').textContent = 
-                document.getElementById('strokeWidth').value;
-        }
-
-        function clearCanvas() {
-            if (confirm('Êtes-vous sûr de vouloir effacer tout le dessin ?')) {
-                shapes = [];
-                selectedShape = null;
-                saveHistory();
-                redraw();
-            }
-        }
-
-        function saveDrawing() {
-            const data = {
-                shapes: shapes,
-                canvasWidth: canvas.width,
-                canvasHeight: canvas.height
-            };
-            
-            const json = JSON.stringify(data, null, 2);
-            const blob = new Blob([json], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'plan_architectural.json';
-            a.click();
-            
-            URL.revokeObjectURL(url);
-        }
-
-        function loadDrawing() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            
-            input.onchange = e => {
-                const file = e.target.files[0];
-                const reader = new FileReader();
-                
-                reader.onload = event => {
-                    try {
-                        const data = JSON.parse(event.target.result);
-                        shapes = data.shapes || [];
-                        selectedShape = null;
-                        saveHistory();
-                        redraw();
-                        alert('Dessin chargé avec succès !');
-                    } catch (error) {
-                        alert('Erreur lors du chargement du fichier');
-                    }
-                };
-                
-                reader.readAsText(file);
-            };
-            
-            input.click();
-        }
-
-        function printDrawing() {
-            window.print();
-        }
-
-        // CSS pour l'impression
-        const printStyles = document.createElement('style');
-        printStyles.textContent = `
-            @media print {
-                body * {
-                    visibility: hidden;
-                }
-                #drawingCanvas, #drawingCanvas * {
-                    visibility: visible;
-                }
-                #drawingCanvas {
-                    position: fixed;
-                    left: 0;
-                    top: 0;
-                    transform: none;
-                    border: none;
-                    box-shadow: none;
-                }
-                .toolbar, .properties, .header, .coordinates, .grid-toggle, .properties-toggle {
-                    display: none !important;
-                }
-            }
-        `;
-        document.head.appendChild(printStyles);
-
-        // Initialisation
-        init();
-    </script>
+    <!-- Scripts JavaScript séparés -->
+    <script src="variables.js"></script>
+    <script src="drawing.js"></script>
+    <script src="events.js"></script>
+    <script src="shapes.js"></script>
+    <script src="eraser.js"></script>
+    <script src="utils.js"></script>
+    <script src="main.js"></script>
 </body>
 </html>
