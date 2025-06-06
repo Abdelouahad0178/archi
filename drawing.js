@@ -973,3 +973,4 @@ function drawRulers() {
         rulerV.appendChild(mark);
     }
 }
+
