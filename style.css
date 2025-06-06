@@ -19,7 +19,7 @@
 
         /* Toolbar améliorée */
         .toolbar {
-            width: 70px;
+            width: 80px;
             background: linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
             padding: 10px 5px;
             display: flex;
