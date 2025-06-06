@@ -133,11 +133,11 @@ function drawShape(shape) {
     ctx.lineWidth = (shape.strokeWidth || 2) / zoom;
     ctx.fillStyle = shape.fillColor || '#fff';
 
-    // Appliquer la rotation pour le texte si nécessaire
-    if (shape.type === 'text' && shape.rotation) {
-        ctx.translate(shape.x, shape.y);
+    // Appliquer la rotation pour les portes et le texte si nécessaire
+    if ((shape.type === 'text' || shape.type === 'door') && shape.rotation) {
+        ctx.translate(shape.startX || shape.x, shape.startY || shape.y);
         ctx.rotate(shape.rotation);
-        ctx.translate(-shape.x, -shape.y);
+        ctx.translate(-(shape.startX || shape.x), -(shape.startY || shape.y));
     }
 
     switch (shape.type) {
@@ -175,8 +175,9 @@ function drawShape(shape) {
             break;
 
         case 'door':
-            const doorWidth = 80;
-            const doorHeight = 15;
+            // Rendu amélioré des portes avec dimensions variables et rotation
+            const doorWidth = shape.doorWidth || 80;
+            const doorHeight = shape.doorHeight || 15;
             
             // Cadre de porte
             ctx.strokeStyle = shape.strokeColor || '#8B4513';
@@ -185,9 +186,10 @@ function drawShape(shape) {
             
             // Porte elle-même
             ctx.fillStyle = '#D2B48C';
-            ctx.fillRect(shape.startX - doorWidth/2 + 2, shape.startY - doorHeight/2 + 2, doorWidth - 4, doorHeight - 4);
+            ctx.fillRect(shape.startX - doorWidth/2 + 2, shape.startY - doorHeight/2 + 2, 
+                        doorWidth - 4, doorHeight - 4);
             
-            // Arc de mouvement de la porte
+            // Arc de mouvement de la porte (adapté aux dimensions)
             ctx.strokeStyle = '#999';
             ctx.lineWidth = 1 / zoom;
             ctx.setLineDash([2, 2]);
@@ -196,10 +198,10 @@ function drawShape(shape) {
             ctx.stroke();
             ctx.setLineDash([]);
             
-            // Poignée
+            // Poignée (positionnée proportionnellement)
             ctx.fillStyle = '#FFD700';
             ctx.beginPath();
-            ctx.arc(shape.startX + doorWidth/3, shape.startY, 2, 0, 2 * Math.PI);
+            ctx.arc(shape.startX + doorWidth/3, shape.startY, Math.max(2, doorWidth/40), 0, 2 * Math.PI);
             ctx.fill();
             break;
 
@@ -395,7 +397,6 @@ function drawShape(shape) {
             ctx.fillText(`${shape.distance}px`, 0, -5);
             ctx.restore();
             break;
-            // drawing.js - PARTIE 2 - Formes avancées et poignées de redimensionnement
 
         case 'furniture':
             const furWidth = Math.abs(shape.endX - shape.startX);
@@ -595,9 +596,11 @@ function drawTempShape(x, y) {
             break;
 
         case 'door':
-            const tempDoorWidth = 80;
-            const tempDoorHeight = 15;
-            ctx.strokeRect(startX - tempDoorWidth/2, startY - tempDoorHeight/2, tempDoorWidth, tempDoorHeight);
+            // Prévisualisation améliorée avec dimensions variables
+            const tempDoorWidth = Math.max(40, Math.abs(x - startX));
+            const tempDoorHeight = Math.max(15, Math.abs(y - startY));
+            ctx.strokeRect(startX - tempDoorWidth/2, startY - tempDoorHeight/2, 
+                          tempDoorWidth, tempDoorHeight);
             break;
     }
 
@@ -641,7 +644,11 @@ function highlightShape(shape) {
             break;
 
         case 'door':
-            ctx.strokeRect(shape.startX - 42, shape.startY - 10, 84, 20);
+            // Mise en surbrillance améliorée pour portes avec dimensions variables
+            const doorWidth = shape.doorWidth || 80;
+            const doorHeight = shape.doorHeight || 15;
+            ctx.strokeRect(shape.startX - doorWidth/2 - 2/zoom, shape.startY - doorHeight/2 - 2/zoom, 
+                          doorWidth + 4/zoom, doorHeight + 4/zoom);
             break;
 
         case 'dimension':
@@ -760,13 +767,34 @@ function getResizeHandles(shape) {
             break;
             
         case 'door':
-            const doorWidth = 80;
-            const doorHeight = 15;
+            // Poignées améliorées pour portes avec dimensions variables et rotation
+            const doorWidth = shape.doorWidth || 80;
+            const doorHeight = shape.doorHeight || 15;
+            const rotation = shape.rotation || 0;
+            
+            // Fonction pour calculer les positions des poignées avec rotation
+            function getDoorHandlePos(localX, localY) {
+                const cos = Math.cos(rotation);
+                const sin = Math.sin(rotation);
+                return {
+                    x: shape.startX + localX * cos - localY * sin,
+                    y: shape.startY + localX * sin + localY * cos
+                };
+            }
+            
+            // 8 poignées autour de la porte
+            const halfW = doorWidth / 2;
+            const halfH = doorHeight / 2;
+            
             handles.push(
-                { x: shape.startX - doorWidth/2, y: shape.startY - doorHeight/2, size: handleSize, type: 'nw' },
-                { x: shape.startX + doorWidth/2, y: shape.startY - doorHeight/2, size: handleSize, type: 'ne' },
-                { x: shape.startX + doorWidth/2, y: shape.startY + doorHeight/2, size: handleSize, type: 'se' },
-                { x: shape.startX - doorWidth/2, y: shape.startY + doorHeight/2, size: handleSize, type: 'sw' }
+                { ...getDoorHandlePos(-halfW, -halfH), size: handleSize, type: 'nw' },
+                { ...getDoorHandlePos(halfW, -halfH), size: handleSize, type: 'ne' },
+                { ...getDoorHandlePos(halfW, halfH), size: handleSize, type: 'se' },
+                { ...getDoorHandlePos(-halfW, halfH), size: handleSize, type: 'sw' },
+                { ...getDoorHandlePos(0, -halfH), size: handleSize, type: 'n' },
+                { ...getDoorHandlePos(halfW, 0), size: handleSize, type: 'e' },
+                { ...getDoorHandlePos(0, halfH), size: handleSize, type: 's' },
+                { ...getDoorHandlePos(-halfW, 0), size: handleSize, type: 'w' }
             );
             break;
             
@@ -973,4 +1001,3 @@ function drawRulers() {
         rulerV.appendChild(mark);
     }
 }
-
