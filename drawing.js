@@ -1,4 +1,4 @@
-// drawing.js - PARTIE 1 - Fonctions de dessin ArchiDraw avec redimensionnement
+// drawing.js - Fonctions de dessin ArchiDraw avec redimensionnement et rotation des portes
 
 // Fonctions de rendu principal
 function redraw() {
@@ -96,8 +96,23 @@ function drawToolPreview(x, y) {
         case 'stairs':
         case 'elevator':
         case 'technical':
+        case 'duct':
+        case 'gaine':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             ctx.strokeRect(x - previewSize/2, y - previewSize/2, previewSize, previewSize);
             ctx.fillRect(x - previewSize/2, y - previewSize/2, previewSize, previewSize);
+            break;
+            
+        case 'column':
+        case 'poteau':
+            // Aperçu rond pour poteau
+            ctx.beginPath();
+            ctx.arc(x, y, previewSize/2, 0, 2 * Math.PI);
+            ctx.stroke();
+            ctx.fill();
             break;
             
         case 'circle':
@@ -175,34 +190,354 @@ function drawShape(shape) {
             break;
 
         case 'door':
-            // Rendu amélioré des portes avec dimensions variables et rotation
-            const doorWidth = shape.doorWidth || 80;
-            const doorHeight = shape.doorHeight || 15;
+            // Rendu entièrement adaptatif basé sur startX, startY, endX, endY
+            const doorMinX = Math.min(shape.startX, shape.endX);
+            const doorMinY = Math.min(shape.startY, shape.endY);
+            const doorMaxX = Math.max(shape.startX, shape.endX);
+            const doorMaxY = Math.max(shape.startY, shape.endY);
+            const doorWidth = Math.abs(doorMaxX - doorMinX);
+            const doorHeight = Math.abs(doorMaxY - doorMinY);
+            const doorCenterX = (doorMinX + doorMaxX) / 2;
+            const doorCenterY = (doorMinY + doorMaxY) / 2;
             
-            // Cadre de porte
+            // Assurer des dimensions minimales
+            if (doorWidth < 20 || doorHeight < 10) {
+                ctx.strokeStyle = shape.strokeColor || '#8B4513';
+                ctx.lineWidth = 2 / zoom;
+                ctx.strokeRect(doorMinX, doorMinY, Math.max(doorWidth, 20), Math.max(doorHeight, 10));
+                break;
+            }
+            
+            // Calculer l'épaisseur du cadre proportionnellement
+            const frameThickness = Math.max(2, Math.min(doorWidth, doorHeight) * 0.08);
+            
+            // Cadre principal de la porte
             ctx.strokeStyle = shape.strokeColor || '#8B4513';
-            ctx.lineWidth = 3 / zoom;
-            ctx.strokeRect(shape.startX - doorWidth/2, shape.startY - doorHeight/2, doorWidth, doorHeight);
+            ctx.lineWidth = Math.max(2, frameThickness) / zoom;
+            ctx.strokeRect(doorMinX, doorMinY, doorWidth, doorHeight);
             
-            // Porte elle-même
-            ctx.fillStyle = '#D2B48C';
-            ctx.fillRect(shape.startX - doorWidth/2 + 2, shape.startY - doorHeight/2 + 2, 
-                        doorWidth - 4, doorHeight - 4);
+            // Panneau intérieur de la porte
+            const doorMargin = Math.max(1, frameThickness * 0.4);
+            ctx.fillStyle = shape.fill ? shape.fillColor : '#D2B48C';
+            ctx.fillRect(doorMinX + doorMargin, doorMinY + doorMargin, 
+                        doorWidth - 2*doorMargin, doorHeight - 2*doorMargin);
             
-            // Arc de mouvement de la porte (adapté aux dimensions)
-            ctx.strokeStyle = '#999';
+            // Contour interne décoratif
+            ctx.strokeStyle = '#A0522D';
+            ctx.lineWidth = Math.max(0.5, frameThickness * 0.25) / zoom;
+            ctx.strokeRect(doorMinX + doorMargin, doorMinY + doorMargin, 
+                          doorWidth - 2*doorMargin, doorHeight - 2*doorMargin);
+            
+            // Arc de mouvement d'ouverture (adaptatif)
+            if (doorWidth > 25) {
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = Math.max(0.5, doorWidth/100) / zoom;
+                ctx.setLineDash([Math.max(2, doorWidth/50), Math.max(2, doorWidth/50)]);
+                ctx.beginPath();
+                
+                // Arc depuis le coin gauche, rayon proportionnel
+                const arcRadius = doorWidth * 0.75;
+                const maxArcAngle = Math.min(Math.PI/2, (doorHeight/doorWidth) * Math.PI/3);
+                ctx.arc(doorMinX, doorCenterY, arcRadius, 0, maxArcAngle);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+            
+            // Poignée proportionnelle
+            if (doorWidth > 15 && doorHeight > 8) {
+                const handleRadius = Math.max(1, Math.min(doorWidth/30, doorHeight/10, 3));
+                const handleX = doorMinX + doorWidth * 0.75; // 75% vers la droite
+                const handleY = doorCenterY; // Centré verticalement
+                
+                // Corps de la poignée
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(handleX, handleY, handleRadius, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // Contour de la poignée
+                ctx.strokeStyle = '#B8860B';
+                ctx.lineWidth = Math.max(0.5, handleRadius * 0.25) / zoom;
+                ctx.stroke();
+            }
+            
+            // Charnières proportionnelles
+            if (doorHeight > 30 && doorWidth > 20) {
+                ctx.fillStyle = '#696969';
+                const hingeWidth = Math.max(2, doorWidth * 0.04);
+                const hingeHeight = Math.max(4, doorHeight * 0.12);
+                
+                // Nombre de charnières selon la hauteur
+                const hingeCount = doorHeight > 70 ? 3 : 2;
+                const hingeSpacing = doorHeight / (hingeCount + 1);
+                
+                for (let i = 0; i < hingeCount; i++) {
+                    const hingeY = doorMinY + hingeSpacing * (i + 1);
+                    const hingeX = doorMinX + 2; // Légèrement décalé du bord
+                    
+                    // Charnière rectangulaire
+                    ctx.fillRect(hingeX - hingeWidth/2, hingeY - hingeHeight/2, hingeWidth, hingeHeight);
+                    
+                    // Détail de la charnière (petite ligne centrale)
+                    ctx.strokeStyle = '#555';
+                    ctx.lineWidth = 1 / zoom;
+                    ctx.beginPath();
+                    ctx.moveTo(hingeX - hingeWidth/4, hingeY - hingeHeight/3);
+                    ctx.lineTo(hingeX + hingeWidth/4, hingeY + hingeHeight/3);
+                    ctx.stroke();
+                }
+            }
+            
+            // Panneaux décoratifs pour les grandes portes
+            if (doorWidth > 50 && doorHeight > 35) {
+                ctx.strokeStyle = shape.strokeColor || '#8B4513';
+                ctx.lineWidth = Math.max(0.5, frameThickness * 0.15) / zoom;
+                
+                const panelMargin = Math.max(6, Math.min(doorWidth, doorHeight) * 0.12);
+                
+                // Panneau décoratif principal
+                ctx.strokeRect(
+                    doorMinX + panelMargin,
+                    doorMinY + panelMargin,
+                    doorWidth - 2*panelMargin,
+                    doorHeight - 2*panelMargin
+                );
+                
+                // Divisions internes pour les très grandes portes
+                if (doorWidth > 80 && doorHeight > 60) {
+                    // Division verticale
+                    ctx.beginPath();
+                    ctx.moveTo(doorCenterX, doorMinY + panelMargin);
+                    ctx.lineTo(doorCenterX, doorMaxY - panelMargin);
+                    ctx.stroke();
+                    
+                    // Division horizontale
+                    if (doorHeight > 100) {
+                        ctx.beginPath();
+                        ctx.moveTo(doorMinX + panelMargin, doorCenterY);
+                        ctx.lineTo(doorMaxX - panelMargin, doorCenterY);
+                        ctx.stroke();
+                    }
+                }
+            }
+            
+            // Indicateur de direction d'ouverture (flèche)
+            if (doorWidth > 40) {
+                ctx.strokeStyle = '#666';
+                ctx.lineWidth = Math.max(1, doorWidth/80) / zoom;
+                const arrowSize = Math.min(8, doorWidth * 0.1);
+                const arrowX = doorMinX + doorWidth * 0.25;
+                const arrowY = doorMinY + doorHeight * 0.15;
+                
+                // Flèche courbe indiquant l'ouverture
+                ctx.beginPath();
+                ctx.arc(doorMinX, arrowY, doorWidth * 0.2, 0, Math.PI/6);
+                ctx.stroke();
+                
+                // Pointe de flèche
+                const arrowEndX = doorMinX + Math.cos(Math.PI/6) * doorWidth * 0.2;
+                const arrowEndY = arrowY + Math.sin(Math.PI/6) * doorWidth * 0.2;
+                ctx.beginPath();
+                ctx.moveTo(arrowEndX - arrowSize/2, arrowEndY - arrowSize/2);
+                ctx.lineTo(arrowEndX, arrowEndY);
+                ctx.lineTo(arrowEndX - arrowSize/2, arrowEndY + arrowSize/2);
+                ctx.stroke();
+            }
+            break;
+
+        case 'duct':
+        case 'gaine':
+            // Gaine technique ou conduit
+            const ductMinX = Math.min(shape.startX, shape.endX);
+            const ductMinY = Math.min(shape.startY, shape.endY);
+            const ductMaxX = Math.max(shape.startX, shape.endX);
+            const ductMaxY = Math.max(shape.startY, shape.endY);
+            const ductWidth = Math.abs(ductMaxX - ductMinX);
+            const ductHeight = Math.abs(ductMaxY - ductMinY);
+            
+            // Fond de la gaine
+            ctx.fillStyle = shape.fill ? shape.fillColor : '#E0E0E0';
+            ctx.fillRect(ductMinX, ductMinY, ductWidth, ductHeight);
+            
+            // Contour principal
+            ctx.strokeStyle = shape.strokeColor || '#666';
+            ctx.lineWidth = (shape.strokeWidth || 2) / zoom;
+            ctx.strokeRect(ductMinX, ductMinY, ductWidth, ductHeight);
+            
+            // Motif de gaine technique (lignes parallèles)
+            ctx.strokeStyle = '#888';
             ctx.lineWidth = 1 / zoom;
-            ctx.setLineDash([2, 2]);
-            ctx.beginPath();
-            ctx.arc(shape.startX - doorWidth/2, shape.startY, doorWidth * 0.8, 0, Math.PI / 2);
-            ctx.stroke();
-            ctx.setLineDash([]);
+            const ductSpacing = Math.max(5, Math.min(ductWidth, ductHeight) / 8);
             
-            // Poignée (positionnée proportionnellement)
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.arc(shape.startX + doorWidth/3, shape.startY, Math.max(2, doorWidth/40), 0, 2 * Math.PI);
-            ctx.fill();
+            for (let i = ductSpacing; i < ductWidth; i += ductSpacing) {
+                ctx.beginPath();
+                ctx.moveTo(ductMinX + i, ductMinY);
+                ctx.lineTo(ductMinX + i, ductMaxY);
+                ctx.stroke();
+            }
+            
+            // Texte "GAINE" proportionnel
+            if (ductWidth > 40 && ductHeight > 20) {
+                ctx.fillStyle = '#333';
+                ctx.font = `bold ${Math.min(12, ductHeight * 0.3)}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('GAINE', (ductMinX + ductMaxX) / 2, (ductMinY + ductMaxY) / 2);
+            }
+            break;
+
+        case 'column':
+        case 'poteau':
+            // Poteau ou colonne
+            const colMinX = Math.min(shape.startX, shape.endX);
+            const colMinY = Math.min(shape.startY, shape.endY);
+            const colMaxX = Math.max(shape.startX, shape.endX);
+            const colMaxY = Math.max(shape.startY, shape.endY);
+            const colWidth = Math.abs(colMaxX - colMinX);
+            const colHeight = Math.abs(colMaxY - colMinY);
+            const colCenterX = (colMinX + colMaxX) / 2;
+            const colCenterY = (colMinY + colMaxY) / 2;
+            
+            // Déterminer si c'est rond ou carré selon les proportions
+            const isRound = Math.abs(colWidth - colHeight) < Math.min(colWidth, colHeight) * 0.2;
+            
+            if (isRound) {
+                // Colonne ronde
+                const radius = Math.min(colWidth, colHeight) / 2;
+                ctx.fillStyle = shape.fill ? shape.fillColor : '#CCCCCC';
+                ctx.beginPath();
+                ctx.arc(colCenterX, colCenterY, radius, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                ctx.strokeStyle = shape.strokeColor || '#333';
+                ctx.lineWidth = (shape.strokeWidth || 2) / zoom;
+                ctx.stroke();
+                
+                // Détails circulaires
+                if (radius > 15) {
+                    ctx.strokeStyle = '#999';
+                    ctx.lineWidth = 1 / zoom;
+                    ctx.beginPath();
+                    ctx.arc(colCenterX, colCenterY, radius * 0.7, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+            } else {
+                // Poteau rectangulaire
+                ctx.fillStyle = shape.fill ? shape.fillColor : '#CCCCCC';
+                ctx.fillRect(colMinX, colMinY, colWidth, colHeight);
+                
+                ctx.strokeStyle = shape.strokeColor || '#333';
+                ctx.lineWidth = (shape.strokeWidth || 2) / zoom;
+                ctx.strokeRect(colMinX, colMinY, colWidth, colHeight);
+                
+                // Motif hachuré en diagonale
+                ctx.strokeStyle = '#999';
+                ctx.lineWidth = 1 / zoom;
+                const colDiagSpacing = Math.max(8, Math.min(colWidth, colHeight) / 6);
+                
+                for (let i = -colHeight; i < colWidth + colHeight; i += colDiagSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(colMinX + i, colMinY);
+                    ctx.lineTo(colMinX + i + colHeight, colMaxY);
+                    ctx.stroke();
+                }
+            }
+            break;
+
+        case 'pipe':
+        case 'conduit':
+            // Conduit ou tuyauterie
+            const pipeMinX = Math.min(shape.startX, shape.endX);
+            const pipeMinY = Math.min(shape.startY, shape.endY);
+            const pipeMaxX = Math.max(shape.startX, shape.endX);
+            const pipeMaxY = Math.max(shape.startY, shape.endY);
+            const pipeWidth = Math.abs(pipeMaxX - pipeMinX);
+            const pipeHeight = Math.abs(pipeMaxY - pipeMinY);
+            
+            // Détermine si c'est horizontal ou vertical
+            const isHorizontal = pipeWidth > pipeHeight;
+            
+            // Couleur selon le type de conduit
+            ctx.fillStyle = shape.fill ? shape.fillColor : '#87CEEB';
+            ctx.fillRect(pipeMinX, pipeMinY, pipeWidth, pipeHeight);
+            
+            ctx.strokeStyle = shape.strokeColor || '#4682B4';
+            ctx.lineWidth = Math.max(2, (shape.strokeWidth || 2)) / zoom;
+            ctx.strokeRect(pipeMinX, pipeMinY, pipeWidth, pipeHeight);
+            
+            // Lignes de joints
+            ctx.strokeStyle = '#5F9EA0';
+            ctx.lineWidth = 1 / zoom;
+            
+            if (isHorizontal) {
+                // Joints verticaux pour conduit horizontal
+                const pipeJointSpacing = Math.max(15, pipeWidth / 6);
+                for (let x = pipeMinX + pipeJointSpacing; x < pipeMaxX; x += pipeJointSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(x, pipeMinY);
+                    ctx.lineTo(x, pipeMaxY);
+                    ctx.stroke();
+                }
+            } else {
+                // Joints horizontaux pour conduit vertical
+                const pipeJointSpacing = Math.max(15, pipeHeight / 6);
+                for (let y = pipeMinY + pipeJointSpacing; y < pipeMaxY; y += pipeJointSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(pipeMinX, y);
+                    ctx.lineTo(pipeMaxX, y);
+                    ctx.stroke();
+                }
+            }
+            break;
+
+        case 'beam':
+        case 'poutre':
+            // Poutre structurelle
+            const beamMinX = Math.min(shape.startX, shape.endX);
+            const beamMinY = Math.min(shape.startY, shape.endY);
+            const beamMaxX = Math.max(shape.startX, shape.endX);
+            const beamMaxY = Math.max(shape.startY, shape.endY);
+            const beamWidth = Math.abs(beamMaxX - beamMinX);
+            const beamHeight = Math.abs(beamMaxY - beamMinY);
+            
+            // Fond de la poutre
+            ctx.fillStyle = shape.fill ? shape.fillColor : '#D3D3D3';
+            ctx.fillRect(beamMinX, beamMinY, beamWidth, beamHeight);
+            
+            // Contour principal épais
+            ctx.strokeStyle = shape.strokeColor || '#2F4F4F';
+            ctx.lineWidth = Math.max(3, (shape.strokeWidth || 3)) / zoom;
+            ctx.strokeRect(beamMinX, beamMinY, beamWidth, beamHeight);
+            
+            // Motif de poutre en I ou H
+            ctx.strokeStyle = '#696969';
+            ctx.lineWidth = 2 / zoom;
+            
+            const isHorizontalBeam = beamWidth > beamHeight;
+            
+            if (isHorizontalBeam) {
+                // Poutre horizontale - motif en I
+                const flangeHeight = Math.max(2, beamHeight * 0.15);
+                // Semelle supérieure
+                ctx.fillRect(beamMinX, beamMinY, beamWidth, flangeHeight);
+                // Semelle inférieure  
+                ctx.fillRect(beamMinX, beamMaxY - flangeHeight, beamWidth, flangeHeight);
+                // Âme centrale
+                const webThickness = Math.max(2, beamHeight * 0.1);
+                const webY = beamMinY + (beamHeight - webThickness) / 2;
+                ctx.fillRect(beamMinX, webY, beamWidth, webThickness);
+            } else {
+                // Poutre verticale - motif en H
+                const flangeWidth = Math.max(2, beamWidth * 0.15);
+                // Semelle gauche
+                ctx.fillRect(beamMinX, beamMinY, flangeWidth, beamHeight);
+                // Semelle droite
+                ctx.fillRect(beamMaxX - flangeWidth, beamMinY, flangeWidth, beamHeight);
+                // Âme centrale
+                const webThickness = Math.max(2, beamWidth * 0.1);
+                const webX = beamMinX + (beamWidth - webThickness) / 2;
+                ctx.fillRect(webX, beamMinY, webThickness, beamHeight);
+            }
             break;
 
         case 'window':
@@ -334,9 +669,9 @@ function drawShape(shape) {
             ctx.clip();
             ctx.strokeStyle = '#666';
             ctx.lineWidth = 1 / zoom;
-            const spacing = Math.max(8, Math.min(techWidth, techHeight) / 8);
+            const techSpacing = Math.max(8, Math.min(techWidth, techHeight) / 8);
             
-            for (let i = -techHeight; i < techWidth + techHeight; i += spacing) {
+            for (let i = -techHeight; i < techWidth + techHeight; i += techSpacing) {
                 ctx.beginPath();
                 ctx.moveTo(techX + i, techY);
                 ctx.lineTo(techX + i + techHeight, techY + techHeight);
@@ -411,9 +746,9 @@ function drawShape(shape) {
             // Détails du meuble
             ctx.strokeStyle = '#654321';
             ctx.lineWidth = 1 / zoom;
-            const margin = Math.min(furWidth, furHeight) * 0.1;
-            if (margin > 2) {
-                ctx.strokeRect(furX + margin, furY + margin, furWidth - 2*margin, furHeight - 2*margin);
+            const furnitureMargin = Math.min(furWidth, furHeight) * 0.1;
+            if (furnitureMargin > 2) {
+                ctx.strokeRect(furX + furnitureMargin, furY + furnitureMargin, furWidth - 2*furnitureMargin, furHeight - 2*furnitureMargin);
             }
             
             // Poignées proportionnelles
@@ -596,11 +931,134 @@ function drawTempShape(x, y) {
             break;
 
         case 'door':
-            // Prévisualisation améliorée avec dimensions variables
-            const tempDoorWidth = Math.max(40, Math.abs(x - startX));
-            const tempDoorHeight = Math.max(15, Math.abs(y - startY));
-            ctx.strokeRect(startX - tempDoorWidth/2, startY - tempDoorHeight/2, 
-                          tempDoorWidth, tempDoorHeight);
+            // Prévisualisation basée sur les coordonnées rectangulaires
+            const tempDoorWidth = Math.abs(x - startX);
+            const tempDoorHeight = Math.abs(y - startY);
+            const tempMinX = Math.min(startX, x);
+            const tempMinY = Math.min(startY, y);
+            const tempCenterX = (startX + x) / 2;
+            const tempCenterY = (startY + y) / 2;
+            
+            // Cadre principal
+            ctx.strokeRect(tempMinX, tempMinY, tempDoorWidth, tempDoorHeight);
+            
+            // Contour interne
+            const previewMargin = Math.max(1, Math.min(tempDoorWidth, tempDoorHeight) * 0.08);
+            if (tempDoorWidth > 10 && tempDoorHeight > 6) {
+                ctx.strokeRect(tempMinX + previewMargin, tempMinY + previewMargin,
+                              tempDoorWidth - 2*previewMargin, tempDoorHeight - 2*previewMargin);
+            }
+            
+            // Arc de mouvement en pointillés
+            if (tempDoorWidth > 20) {
+                ctx.beginPath();
+                const arcRadius = tempDoorWidth * 0.75;
+                ctx.arc(tempMinX, tempCenterY, arcRadius, 0, Math.PI/6);
+                ctx.stroke();
+            }
+            
+            // Position de la poignée
+            if (tempDoorWidth > 15) {
+                ctx.beginPath();
+                ctx.arc(tempMinX + tempDoorWidth * 0.75, tempCenterY, 2, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+            
+            // Charnières approximatives
+            if (tempDoorHeight > 25) {
+                const hingeCount = tempDoorHeight > 60 ? 3 : 2;
+                const hingeSpacing = tempDoorHeight / (hingeCount + 1);
+                for (let i = 0; i < hingeCount; i++) {
+                    const hingeY = tempMinY + hingeSpacing * (i + 1);
+                    ctx.strokeRect(tempMinX + 1, hingeY - 2, 4, 4);
+                }
+            }
+            break;
+
+        case 'duct':
+        case 'gaine':
+            // Prévisualisation de gaine
+            ctx.strokeRect(startX, startY, x - startX, y - startY);
+            // Lignes de gaine
+            const gSpacing = Math.max(5, Math.abs(x - startX) / 8);
+            for (let i = gSpacing; i < Math.abs(x - startX); i += gSpacing) {
+                ctx.beginPath();
+                ctx.moveTo(startX + i, startY);
+                ctx.lineTo(startX + i, y);
+                ctx.stroke();
+            }
+            break;
+
+        case 'column':
+        case 'poteau':
+            // Prévisualisation de poteau
+            const colW = Math.abs(x - startX);
+            const colH = Math.abs(y - startY);
+            const isRoundPreview = Math.abs(colW - colH) < Math.min(colW, colH) * 0.2;
+            
+            if (isRoundPreview) {
+                const radius = Math.min(colW, colH) / 2;
+                ctx.beginPath();
+                ctx.arc((startX + x) / 2, (startY + y) / 2, radius, 0, 2 * Math.PI);
+                ctx.stroke();
+            } else {
+                ctx.strokeRect(startX, startY, x - startX, y - startY);
+                // Motif hachuré
+                const diagSpacing = Math.max(8, Math.min(colW, colH) / 6);
+                for (let i = -colH; i < colW + colH; i += diagSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(startX + i, startY);
+                    ctx.lineTo(startX + i + colH, y);
+                    ctx.stroke();
+                }
+            }
+            break;
+
+        case 'pipe':
+        case 'conduit':
+            // Prévisualisation de conduit
+            ctx.strokeRect(startX, startY, x - startX, y - startY);
+            // Joints
+            const isHorPipe = Math.abs(x - startX) > Math.abs(y - startY);
+            if (isHorPipe) {
+                const jointSpacing = Math.max(15, Math.abs(x - startX) / 6);
+                for (let i = jointSpacing; i < Math.abs(x - startX); i += jointSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(startX + i, startY);
+                    ctx.lineTo(startX + i, y);
+                    ctx.stroke();
+                }
+            } else {
+                const jointSpacing = Math.max(15, Math.abs(y - startY) / 6);
+                for (let i = jointSpacing; i < Math.abs(y - startY); i += jointSpacing) {
+                    ctx.beginPath();
+                    ctx.moveTo(startX, startY + i);
+                    ctx.lineTo(x, startY + i);
+                    ctx.stroke();
+                }
+            }
+            break;
+
+        case 'beam':
+        case 'poutre':
+            // Prévisualisation de poutre
+            ctx.strokeRect(startX, startY, x - startX, y - startY);
+            // Motif en I ou H
+            const beamW = Math.abs(x - startX);
+            const beamH = Math.abs(y - startY);
+            const isHorBeam = beamW > beamH;
+            
+            if (isHorBeam) {
+                // Poutre horizontale - motif en I
+                const flangeH = Math.max(2, beamH * 0.15);
+                ctx.strokeRect(startX, startY, beamW, flangeH);
+                ctx.strokeRect(startX, y - flangeH, beamW, flangeH);
+            } else {
+                // Poutre verticale - motif en H
+                const flangeW = Math.max(2, beamW * 0.15);
+                ctx.strokeRect(startX, startY, flangeW, beamH);
+                ctx.strokeRect(x - flangeW, startY, flangeW, beamH);
+            }
             break;
     }
 
@@ -644,11 +1102,29 @@ function highlightShape(shape) {
             break;
 
         case 'door':
-            // Mise en surbrillance améliorée pour portes avec dimensions variables
-            const doorWidth = shape.doorWidth || 80;
-            const doorHeight = shape.doorHeight || 15;
-            ctx.strokeRect(shape.startX - doorWidth/2 - 2/zoom, shape.startY - doorHeight/2 - 2/zoom, 
-                          doorWidth + 4/zoom, doorHeight + 4/zoom);
+            // Mise en surbrillance basée sur les coordonnées rectangulaires
+            const highlightDoorMinX = Math.min(shape.startX, shape.endX);
+            const highlightDoorMinY = Math.min(shape.startY, shape.endY);
+            const highlightDoorWidth = Math.abs(shape.endX - shape.startX);
+            const highlightDoorHeight = Math.abs(shape.endY - shape.startY);
+            
+            // Contour principal élargi
+            const highlightMargin = 3/zoom;
+            ctx.strokeRect(
+                highlightDoorMinX - highlightMargin, 
+                highlightDoorMinY - highlightMargin, 
+                highlightDoorWidth + 2*highlightMargin, 
+                highlightDoorHeight + 2*highlightMargin
+            );
+            
+            // Arc de mouvement en surbrillance
+            if (highlightDoorWidth > 25) {
+                const highlightDoorCenterY = (highlightDoorMinY + highlightDoorMinY + highlightDoorHeight) / 2;
+                ctx.beginPath();
+                const arcRadius = highlightDoorWidth * 0.75 + highlightMargin;
+                ctx.arc(highlightDoorMinX, highlightDoorCenterY, arcRadius, 0, Math.PI/6);
+                ctx.stroke();
+            }
             break;
 
         case 'dimension':
@@ -767,34 +1243,21 @@ function getResizeHandles(shape) {
             break;
             
         case 'door':
-            // Poignées améliorées pour portes avec dimensions variables et rotation
-            const doorWidth = shape.doorWidth || 80;
-            const doorHeight = shape.doorHeight || 15;
-            const rotation = shape.rotation || 0;
-            
-            // Fonction pour calculer les positions des poignées avec rotation
-            function getDoorHandlePos(localX, localY) {
-                const cos = Math.cos(rotation);
-                const sin = Math.sin(rotation);
-                return {
-                    x: shape.startX + localX * cos - localY * sin,
-                    y: shape.startY + localX * sin + localY * cos
-                };
-            }
-            
-            // 8 poignées autour de la porte
-            const halfW = doorWidth / 2;
-            const halfH = doorHeight / 2;
+            // Poignées standard comme pour les rectangles
+            const doorMinX = Math.min(shape.startX, shape.endX);
+            const doorMinY = Math.min(shape.startY, shape.endY);
+            const doorMaxX = Math.max(shape.startX, shape.endX);
+            const doorMaxY = Math.max(shape.startY, shape.endY);
             
             handles.push(
-                { ...getDoorHandlePos(-halfW, -halfH), size: handleSize, type: 'nw' },
-                { ...getDoorHandlePos(halfW, -halfH), size: handleSize, type: 'ne' },
-                { ...getDoorHandlePos(halfW, halfH), size: handleSize, type: 'se' },
-                { ...getDoorHandlePos(-halfW, halfH), size: handleSize, type: 'sw' },
-                { ...getDoorHandlePos(0, -halfH), size: handleSize, type: 'n' },
-                { ...getDoorHandlePos(halfW, 0), size: handleSize, type: 'e' },
-                { ...getDoorHandlePos(0, halfH), size: handleSize, type: 's' },
-                { ...getDoorHandlePos(-halfW, 0), size: handleSize, type: 'w' }
+                { x: doorMinX, y: doorMinY, size: handleSize, type: 'nw' },
+                { x: doorMaxX, y: doorMinY, size: handleSize, type: 'ne' },
+                { x: doorMaxX, y: doorMaxY, size: handleSize, type: 'se' },
+                { x: doorMinX, y: doorMaxY, size: handleSize, type: 'sw' },
+                { x: (doorMinX + doorMaxX) / 2, y: doorMinY, size: handleSize, type: 'n' },
+                { x: doorMaxX, y: (doorMinY + doorMaxY) / 2, size: handleSize, type: 'e' },
+                { x: (doorMinX + doorMaxX) / 2, y: doorMaxY, size: handleSize, type: 's' },
+                { x: doorMinX, y: (doorMinY + doorMaxY) / 2, size: handleSize, type: 'w' }
             );
             break;
             
@@ -901,6 +1364,7 @@ function getShapeCenter(shape) {
         case 'line':
         case 'wall':
         case 'rectangle':
+        case 'door':
         case 'window':
         case 'stairs':
         case 'elevator':
@@ -910,12 +1374,19 @@ function getShapeCenter(shape) {
         case 'kitchen':
         case 'tree':
         case 'dimension':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             return {
                 x: (shape.startX + shape.endX) / 2,
                 y: (shape.startY + shape.endY) / 2
             };
         case 'circle':
-        case 'door':
             return {
                 x: shape.startX,
                 y: shape.startY
@@ -960,13 +1431,13 @@ function drawRulers() {
     
     // Règle horizontale - adaptée à la taille réelle du canvas
     const rulerWidth = canvas.width;
-    const step = Math.max(25, Math.round(50 / zoom)); // Adapter l'espacement au zoom
+    const rulerStep = Math.max(25, Math.round(50 / zoom)); // Adapter l'espacement au zoom
     
-    for (let i = 0; i <= rulerWidth; i += step) {
+    for (let i = 0; i <= rulerWidth; i += rulerStep) {
         const mark = document.createElement('div');
         mark.className = 'ruler-mark';
         
-        if (i % (step * 2) === 0) {
+        if (i % (rulerStep * 2) === 0) {
             mark.classList.add('major');
             
             const number = document.createElement('div');
@@ -982,12 +1453,12 @@ function drawRulers() {
     // Règle verticale - adaptée à la taille réelle du canvas
     const rulerHeight = canvas.height;
     
-    for (let i = 0; i <= rulerHeight; i += step) {
+    for (let i = 0; i <= rulerHeight; i += rulerStep) {
         const mark = document.createElement('div');
         mark.className = 'ruler-mark';
         mark.style.transform = 'rotate(90deg)';
         
-        if (i % (step * 2) === 0) {
+        if (i % (rulerStep * 2) === 0) {
             mark.classList.add('major');
             
             const number = document.createElement('div');
