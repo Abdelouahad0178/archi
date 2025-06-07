@@ -1,8 +1,8 @@
-// events-handlers.js - Gestionnaires d'événements ArchiDraw avec redimensionnement
+// events-handlers.js - Gestionnaires d'événements ArchiDraw avec rotation universelle
 
 // Configuration des événements
 function setupEventListeners() {
-    // Outils avec curseurs personnalisés
+    // Outils avec curseurs personnalisés et nouveaux outils
     document.querySelectorAll('.tool-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.tool-btn').forEach(b => {
@@ -23,9 +23,12 @@ function setupEventListeners() {
                 document.querySelector('.canvas-area').classList.remove('erase-mode');
                 document.getElementById('eraserSize').classList.remove('show');
                 
-                // Appliquer le curseur spécialisé
+                // Appliquer le curseur spécialisé pour tous les outils
                 canvas.classList.add(`cursor-${currentTool}`);
             }
+            
+            // Afficher le message d'aide pour l'outil sélectionné
+            showToolHelp(currentTool);
         });
         
         // Support tactile pour les boutons d'outils
@@ -46,6 +49,9 @@ function setupEventListeners() {
     canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
 
+    // Support de la molette pour le zoom
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+
     // Properties
     document.getElementById('strokeWidth').addEventListener('input', updateStrokeWidthDisplay);
     document.getElementById('showGrid').addEventListener('change', redraw);
@@ -55,13 +61,36 @@ function setupEventListeners() {
     ['shapeWidth', 'shapeHeight', 'shapeX', 'shapeY', 'shapeRadius'].forEach(id => {
         const input = document.getElementById(id);
         if (input) {
-            input.addEventListener('input', updateShapePropertiesDisplay);
+            input.addEventListener('input', function() {
+                // Mise à jour en temps réel pendant la saisie
+                if (selectedShape) {
+                    updateShapePropertiesPanel();
+                }
+            });
+            input.addEventListener('change', applyShapeProperties);
         }
     });
 
     // Keyboard
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
+
+    // Événements pour les nouveaux outils
+    setupNewToolsEvents();
+}
+
+// Configuration spéciale pour les nouveaux outils
+function setupNewToolsEvents() {
+    // Événements pour les outils techniques
+    TECHNICAL_TOOLS.forEach(tool => {
+        const btn = document.querySelector(`[data-tool="${tool}"]`);
+        if (btn) {
+            btn.addEventListener('mouseenter', function() {
+                showToolTooltip(tool, this);
+            });
+            btn.addEventListener('mouseleave', hideToolTooltip);
+        }
+    });
 }
 
 // Fonction pour obtenir les coordonnées précises de la souris
@@ -164,6 +193,23 @@ function updateCursorClass(newCursorClass) {
     }
 }
 
+// Gestion de la molette pour le zoom
+function handleWheel(e) {
+    e.preventDefault();
+    
+    const delta = e.deltaY * ZOOM_CONFIG.wheelSensitivity;
+    const newZoom = Math.max(ZOOM_CONFIG.min, Math.min(ZOOM_CONFIG.max, zoom - delta));
+    
+    if (newZoom !== zoom) {
+        zoom = newZoom;
+        redraw();
+        if (showRuler) drawRulers();
+        
+        // Afficher temporairement le niveau de zoom
+        showZoomLevel();
+    }
+}
+
 // Touch handlers avec déplacement, rotation et redimensionnement
 function handleTouchStart(e) {
     e.preventDefault();
@@ -221,11 +267,12 @@ function handleTouchMove(e) {
         const dy = touches[0].clientY - touches[1].clientY;
         const currentPinchDistance = Math.sqrt(dx * dx + dy * dy);
         const zoomFactor = currentPinchDistance / initialPinchDistance;
-        zoom = Math.min(Math.max(zoom * zoomFactor, 0.3), 3);
+        zoom = Math.min(Math.max(zoom * zoomFactor, ZOOM_CONFIG.min), ZOOM_CONFIG.max);
         initialPinchDistance = currentPinchDistance;
         if (typeof redraw === 'function') {
             redraw();
         }
+        showZoomLevel();
     }
 }
 
@@ -342,7 +389,7 @@ function handleDoubleTap(e) {
     }
 }
 
-// Gestion des raccourcis clavier
+// Gestion des raccourcis clavier avec support des nouveaux outils
 function handleKeyDown(e) {
     if (typeof canUseShortcut === 'function' && !canUseShortcut(e.key)) {
         return;
@@ -350,9 +397,10 @@ function handleKeyDown(e) {
 
     // Prévenir les actions par défaut pour certaines touches
     if (['Delete', 'Escape', ' '].includes(e.key) || 
-        (e.ctrlKey && ['z', 'y', 'c', 'v', 'd'].includes(e.key.toLowerCase())) ||
+        (e.ctrlKey && ['z', 'y', 'c', 'v', 'd', 's', 'o', 'n', 'p', 'e'].includes(e.key.toLowerCase())) ||
         (e.key >= '1' && e.key <= '9') ||
-        (e.key === 'r' && selectedShape && currentTool === 'select')) {
+        (e.key === 'r' && selectedShape && currentTool === 'select') ||
+        ['g', 'l', 't', 'v', 'e'].includes(e.key.toLowerCase())) {
         e.preventDefault();
     }
 
@@ -529,3 +577,89 @@ function canUseShortcut(key) {
     }
     return true;
 }
+
+// Fonctions d'aide pour les outils
+function showToolHelp(toolType) {
+    const helpMessage = getHelpMessage(toolType);
+    const helpElement = document.getElementById('toolHelp');
+    if (helpElement) {
+        helpElement.textContent = helpMessage;
+        helpElement.style.display = 'block';
+        setTimeout(() => {
+            if (helpElement) helpElement.style.display = 'none';
+        }, 3000);
+    }
+}
+
+function showToolTooltip(toolType, element) {
+    const tooltip = document.createElement('div');
+    tooltip.className = 'tool-tooltip';
+    tooltip.style.cssText = `
+        position: absolute;
+        background: rgba(0,0,0,0.9);
+        color: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        z-index: 10000;
+        pointer-events: none;
+        max-width: 200px;
+    `;
+    
+    const helpMsg = getHelpMessage(toolType);
+    tooltip.innerHTML = `<strong>${toolType.toUpperCase()}</strong><br>${helpMsg}`;
+    
+    document.body.appendChild(tooltip);
+    
+    const rect = element.getBoundingClientRect();
+    tooltip.style.left = (rect.right + 10) + 'px';
+    tooltip.style.top = rect.top + 'px';
+    
+    // Stocker la référence pour pouvoir la supprimer
+    element._tooltip = tooltip;
+}
+
+function hideToolTooltip() {
+    const tooltips = document.querySelectorAll('.tool-tooltip');
+    tooltips.forEach(tooltip => tooltip.remove());
+}
+
+// Affichage temporaire du niveau de zoom
+function showZoomLevel() {
+    let zoomDisplay = document.getElementById('zoomDisplay');
+    if (!zoomDisplay) {
+        zoomDisplay = document.createElement('div');
+        zoomDisplay.id = 'zoomDisplay';
+        zoomDisplay.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 10000;
+            pointer-events: none;
+        `;
+        document.body.appendChild(zoomDisplay);
+    }
+    
+    zoomDisplay.textContent = `🔍 ${Math.round(zoom * 100)}%`;
+    zoomDisplay.style.display = 'block';
+    
+    clearTimeout(zoomDisplay._hideTimeout);
+    zoomDisplay._hideTimeout = setTimeout(() => {
+        zoomDisplay.style.display = 'none';
+    }, 1000);
+}
+
+// Export des fonctions globales pour compatibilité
+window.setupEventListeners = setupEventListeners;
+window.getCanvasCoordinates = getCanvasCoordinates;
+window.getTouchCoordinates = getTouchCoordinates;
+window.applyGridSnap = applyGridSnap;
+window.updateCoordinatesDisplay = updateCoordinatesDisplay;
+window.canUseShortcut = canUseShortcut;

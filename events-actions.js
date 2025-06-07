@@ -54,8 +54,32 @@ function handleSelectAction(x, y) {
     }
     
     // Sinon, sélectionner une nouvelle forme
-    selectShape(x, y);
+    performShapeSelection(x, y);
     isDrawing = false;
+}
+
+// Fonction de sélection de forme (remplace l'appel à selectShape)
+function performShapeSelection(x, y) {
+    selectedShape = null;
+    for (let i = shapes.length - 1; i >= 0; i--) {
+        if (isPointInShape(x, y, shapes[i])) {
+            selectedShape = shapes[i];
+            showTransformInfo();
+            updateShapePropertiesPanel();
+            break;
+        }
+    }
+    
+    if (!selectedShape) {
+        updateShapePropertiesPanel();
+        // Supprimer les infos de transformation si aucune forme sélectionnée
+        const existingInfo = document.getElementById('transformInfo');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+    }
+    
+    redraw();
 }
 
 function handleDimensionAction(x, y) {
@@ -172,6 +196,15 @@ function performResize(x, y) {
         case 'furniture':
         case 'bathroom':
         case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             resizeRectangle(selectedShape, resizeHandle, x, y, preserveAspectRatio);
             break;
             
@@ -238,8 +271,10 @@ function resizeRectangle(shape, handle, x, y, preserveAspectRatio) {
             break;
     }
     
-    // Assurer une taille minimale
-    const minSize = 10;
+    // Assurer une taille minimale selon le type d'outil
+    const toolMinSize = getToolMinSize(shape.type);
+    const minSize = toolMinSize ? Math.min(toolMinSize.width, toolMinSize.height) : 10;
+    
     if (newMaxX - newMinX < minSize) {
         if (handle.type.includes('e')) {
             newMaxX = newMinX + minSize;
@@ -327,6 +362,15 @@ function updateResizeInfo() {
         case 'furniture':
         case 'bathroom':
         case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             const width = Math.abs(selectedShape.endX - selectedShape.startX);
             const height = Math.abs(selectedShape.endY - selectedShape.startY);
             info = `<div><strong>Largeur:</strong> ${Math.round(width)}px</div>
@@ -397,21 +441,127 @@ function selectTool(toolName) {
     const toolButton = document.querySelector(`.tool-btn[data-tool="${toolName}"]`);
     if (toolButton) {
         toolButton.click();
+        return true;
     }
+    return false;
 }
 
 function selectAll() {
     // Sélectionner toutes les formes (pour une future implémentation)
     if (shapes.length > 0) {
         console.log('Sélection multiple non encore implémentée');
-        // TODO: Implémenter la sélection multiple
+        showNotification && showNotification(`📋 ${shapes.length} formes disponibles (sélection multiple: bientôt disponible)`, 'info');
+    } else {
+        showNotification && showNotification('⚠️ Aucune forme à sélectionner', 'warning');
     }
+}
+
+// Fonctions de manipulation des formes sélectionnées
+function copySelected() {
+    if (selectedShape) {
+        clipboard = JSON.parse(JSON.stringify(selectedShape));
+        showNotification && showNotification('✅ Élément copié !', 'success');
+    } else {
+        showNotification && showNotification('⚠️ Aucune forme sélectionnée', 'warning');
+    }
+}
+
+function pasteSelected() {
+    if (clipboard) {
+        const newShape = JSON.parse(JSON.stringify(clipboard));
+        const offset = 20;
+        
+        if (newShape.startX !== undefined) {
+            newShape.startX += offset;
+            newShape.startY += offset;
+        }
+        if (newShape.endX !== undefined) {
+            newShape.endX += offset;
+            newShape.endY += offset;
+        }
+        if (newShape.x !== undefined) {
+            newShape.x += offset;
+            newShape.y += offset;
+        }
+        
+        shapes.push(newShape);
+        selectedShape = newShape;
+        saveHistory();
+        redraw();
+        updateShapePropertiesPanel();
+        showNotification && showNotification('📋 Élément collé !', 'success');
+    } else {
+        showNotification && showNotification('⚠️ Aucun élément dans le presse-papier', 'warning');
+    }
+}
+
+function duplicateSelected() {
+    if (selectedShape) {
+        const newShape = JSON.parse(JSON.stringify(selectedShape));
+        const offset = 30;
+        
+        if (newShape.startX !== undefined) {
+            newShape.startX += offset;
+            newShape.startY += offset;
+        }
+        if (newShape.endX !== undefined) {
+            newShape.endX += offset;
+            newShape.endY += offset;
+        }
+        if (newShape.x !== undefined) {
+            newShape.x += offset;
+            newShape.y += offset;
+        }
+        
+        shapes.push(newShape);
+        selectedShape = newShape;
+        saveHistory();
+        redraw();
+        updateShapePropertiesPanel();
+        showNotification && showNotification('⧉ Élément dupliqué !', 'success');
+    } else {
+        showNotification && showNotification('⚠️ Aucune forme sélectionnée', 'warning');
+    }
+}
+
+function deleteSelected() {
+    if (selectedShape) {
+        const shapeType = selectedShape.type;
+        shapes = shapes.filter(s => s !== selectedShape);
+        selectedShape = null;
+        // Supprimer les infos de transformation
+        const existingInfo = document.getElementById('transformInfo');
+        if (existingInfo) {
+            existingInfo.remove();
+        }
+        saveHistory();
+        redraw();
+        updateShapePropertiesPanel();
+        showNotification && showNotification(`🗑️ ${shapeType} supprimé`, 'info');
+    } else {
+        showNotification && showNotification('⚠️ Aucune forme sélectionnée', 'warning');
+    }
+}
+
+function rotateSelected(degrees) {
+    if (!selectedShape) {
+        alert('Aucune forme sélectionnée');
+        return;
+    }
+    
+    const center = getShapeCenter(selectedShape);
+    const radians = (degrees * Math.PI) / 180;
+    rotateShape(selectedShape, radians, center);
+    updateShapePropertiesPanel();
+    saveHistory();
+    redraw();
+    showNotification && showNotification(`🔄 Rotation ${degrees}° appliquée`, 'info');
 }
 
 // Aide contextuelle pour les raccourcis
 function showShortcutsHelp() {
     const helpInfo = `
-    🎯 RACCOURCIS ARCHIDRAW :
+    🎯 RACCOURCIS ARCHIDRAW 3.0 :
     
     📐 OUTILS :
     • V = Sélection
@@ -420,8 +570,12 @@ function showShortcutsHelp() {
     • E = Gomme
     • 1-9 = Outils par numéro
     
+    🔄 ROTATION UNIVERSELLE :
+    • R = Rotation 90° (forme sélectionnée)
+    • Poignées bleues = Rotation libre
+    • TOUS les outils supportent la rotation !
+    
     ✏️ ACTIONS :
-    • R = Rotation 90°
     • G = Grille on/off
     • S = Magnétisme on/off
     • Espace = Sélection temporaire
@@ -446,6 +600,11 @@ function showShortcutsHelp() {
     • Ctrl+S = Sauvegarder
     • Ctrl+E = Exporter PNG
     • Ctrl+P = Imprimer
+    
+    🏗️ NOUVEAUX OUTILS :
+    • Gaines techniques, conduits, tuyaux
+    • Poteaux, colonnes, poutres
+    • Rotation universelle pour TOUS !
     `;
     
     alert(helpInfo);

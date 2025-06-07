@@ -1,4 +1,4 @@
-// drawing.js - Fonctions de dessin ArchiDraw avec redimensionnement et rotation des portes
+// drawing.js - Fonctions de dessin ArchiDraw avec redimensionnement et rotation universelle
 
 // Fonctions de rendu principal
 function redraw() {
@@ -148,11 +148,12 @@ function drawShape(shape) {
     ctx.lineWidth = (shape.strokeWidth || 2) / zoom;
     ctx.fillStyle = shape.fillColor || '#fff';
 
-    // Appliquer la rotation pour les portes et le texte si nécessaire
-    if ((shape.type === 'text' || shape.type === 'door') && shape.rotation) {
-        ctx.translate(shape.startX || shape.x, shape.startY || shape.y);
+    // Appliquer la rotation si nécessaire
+    if (shape.rotation && shape.rotation !== 0) {
+        const center = getShapeCenter(shape);
+        ctx.translate(center.x, center.y);
         ctx.rotate(shape.rotation);
-        ctx.translate(-(shape.startX || shape.x), -(shape.startY || shape.y));
+        ctx.translate(-center.x, -center.y);
     }
 
     switch (shape.type) {
@@ -1090,6 +1091,15 @@ function highlightShape(shape) {
         case 'furniture':
         case 'bathroom':
         case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             const width = shape.endX - shape.startX;
             const height = shape.endY - shape.startY;
             ctx.strokeRect(shape.startX - 2/zoom, shape.startY - 2/zoom, width + 4/zoom, height + 4/zoom);
@@ -1099,32 +1109,6 @@ function highlightShape(shape) {
             ctx.beginPath();
             ctx.arc(shape.startX, shape.startY, shape.radius + 2/zoom, 0, 2 * Math.PI);
             ctx.stroke();
-            break;
-
-        case 'door':
-            // Mise en surbrillance basée sur les coordonnées rectangulaires
-            const highlightDoorMinX = Math.min(shape.startX, shape.endX);
-            const highlightDoorMinY = Math.min(shape.startY, shape.endY);
-            const highlightDoorWidth = Math.abs(shape.endX - shape.startX);
-            const highlightDoorHeight = Math.abs(shape.endY - shape.startY);
-            
-            // Contour principal élargi
-            const highlightMargin = 3/zoom;
-            ctx.strokeRect(
-                highlightDoorMinX - highlightMargin, 
-                highlightDoorMinY - highlightMargin, 
-                highlightDoorWidth + 2*highlightMargin, 
-                highlightDoorHeight + 2*highlightMargin
-            );
-            
-            // Arc de mouvement en surbrillance
-            if (highlightDoorWidth > 25) {
-                const highlightDoorCenterY = (highlightDoorMinY + highlightDoorMinY + highlightDoorHeight) / 2;
-                ctx.beginPath();
-                const arcRadius = highlightDoorWidth * 0.75 + highlightMargin;
-                ctx.arc(highlightDoorMinX, highlightDoorCenterY, arcRadius, 0, Math.PI/6);
-                ctx.stroke();
-            }
             break;
 
         case 'dimension':
@@ -1179,125 +1163,6 @@ function drawResizeHandles(shape) {
     ctx.restore();
 }
 
-function getResizeHandles(shape) {
-    if (!shape) return [];
-    
-    const handles = [];
-    const handleSize = 6;
-    
-    switch (shape.type) {
-        case 'line':
-        case 'wall':
-            handles.push(
-                { x: shape.startX, y: shape.startY, size: handleSize, type: 'start' },
-                { x: shape.endX, y: shape.endY, size: handleSize, type: 'end' }
-            );
-            break;
-            
-        case 'rectangle':
-        case 'window':
-        case 'stairs':
-        case 'elevator':
-        case 'technical':
-        case 'furniture':
-        case 'bathroom':
-        case 'kitchen':
-            const minX = Math.min(shape.startX, shape.endX);
-            const minY = Math.min(shape.startY, shape.endY);
-            const maxX = Math.max(shape.startX, shape.endX);
-            const maxY = Math.max(shape.startY, shape.endY);
-            
-            handles.push(
-                { x: minX, y: minY, size: handleSize, type: 'nw' },
-                { x: maxX, y: minY, size: handleSize, type: 'ne' },
-                { x: maxX, y: maxY, size: handleSize, type: 'se' },
-                { x: minX, y: maxY, size: handleSize, type: 'sw' },
-                { x: (minX + maxX) / 2, y: minY, size: handleSize, type: 'n' },
-                { x: maxX, y: (minY + maxY) / 2, size: handleSize, type: 'e' },
-                { x: (minX + maxX) / 2, y: maxY, size: handleSize, type: 's' },
-                { x: minX, y: (minY + maxY) / 2, size: handleSize, type: 'w' }
-            );
-            break;
-            
-        case 'circle':
-            handles.push(
-                { x: shape.startX + shape.radius, y: shape.startY, size: handleSize, type: 'radius' },
-                { x: shape.startX - shape.radius, y: shape.startY, size: handleSize, type: 'radius' },
-                { x: shape.startX, y: shape.startY + shape.radius, size: handleSize, type: 'radius' },
-                { x: shape.startX, y: shape.startY - shape.radius, size: handleSize, type: 'radius' }
-            );
-            break;
-            
-        case 'tree':
-            const treeRadius = Math.min(Math.abs(shape.endX - shape.startX), 
-                                       Math.abs(shape.endY - shape.startY)) / 2;
-            const treeCenterX = (shape.startX + shape.endX) / 2;
-            const treeCenterY = (shape.startY + shape.endY) / 2;
-            
-            handles.push(
-                { x: treeCenterX + treeRadius, y: treeCenterY, size: handleSize, type: 'radius' },
-                { x: treeCenterX - treeRadius, y: treeCenterY, size: handleSize, type: 'radius' },
-                { x: treeCenterX, y: treeCenterY + treeRadius, size: handleSize, type: 'radius' },
-                { x: treeCenterX, y: treeCenterY - treeRadius, size: handleSize, type: 'radius' }
-            );
-            break;
-            
-        case 'door':
-            // Poignées standard comme pour les rectangles
-            const doorMinX = Math.min(shape.startX, shape.endX);
-            const doorMinY = Math.min(shape.startY, shape.endY);
-            const doorMaxX = Math.max(shape.startX, shape.endX);
-            const doorMaxY = Math.max(shape.startY, shape.endY);
-            
-            handles.push(
-                { x: doorMinX, y: doorMinY, size: handleSize, type: 'nw' },
-                { x: doorMaxX, y: doorMinY, size: handleSize, type: 'ne' },
-                { x: doorMaxX, y: doorMaxY, size: handleSize, type: 'se' },
-                { x: doorMinX, y: doorMaxY, size: handleSize, type: 'sw' },
-                { x: (doorMinX + doorMaxX) / 2, y: doorMinY, size: handleSize, type: 'n' },
-                { x: doorMaxX, y: (doorMinY + doorMaxY) / 2, size: handleSize, type: 'e' },
-                { x: (doorMinX + doorMaxX) / 2, y: doorMaxY, size: handleSize, type: 's' },
-                { x: doorMinX, y: (doorMinY + doorMaxY) / 2, size: handleSize, type: 'w' }
-            );
-            break;
-            
-        case 'text':
-            if (shape.text) {
-                ctx.save();
-                ctx.font = `${shape.fontSize}px ${shape.fontFamily || 'Arial'}`;
-                const metrics = ctx.measureText(shape.text);
-                const textWidth = metrics.width;
-                const textHeight = shape.fontSize;
-                ctx.restore();
-                
-                handles.push(
-                    { x: shape.x, y: shape.y, size: handleSize, type: 'nw' },
-                    { x: shape.x + textWidth, y: shape.y, size: handleSize, type: 'ne' },
-                    { x: shape.x + textWidth, y: shape.y + textHeight, size: handleSize, type: 'se' },
-                    { x: shape.x, y: shape.y + textHeight, size: handleSize, type: 'sw' }
-                );
-            }
-            break;
-    }
-    
-    return handles;
-}
-
-function getResizeHandleAt(x, y) {
-    if (!selectedShape) return null;
-    
-    const handles = getResizeHandles(selectedShape);
-    for (let handle of handles) {
-        const dx = x - handle.x;
-        const dy = y - handle.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance <= handle.size + 5) { // Tolérance de 5px
-            return handle;
-        }
-    }
-    return null;
-}
-
 function drawRotationHandles(shape) {
     if (!shape) return;
     
@@ -1333,87 +1198,6 @@ function drawRotationHandles(shape) {
     ctx.stroke();
     
     ctx.restore();
-}
-
-function getRotationHandles(shape) {
-    if (!shape) return [];
-    
-    const center = getShapeCenter(shape);
-    const handles = [];
-    const handleSize = 8;
-    const distance = 50; // Distance des poignées du centre
-    
-    // Créer 4 poignées de rotation autour de la forme
-    for (let i = 0; i < 4; i++) {
-        const angle = (i * Math.PI) / 2;
-        handles.push({
-            x: center.x + Math.cos(angle) * distance,
-            y: center.y + Math.sin(angle) * distance,
-            size: handleSize,
-            angle: angle
-        });
-    }
-
-    return handles;
-}
-
-function getShapeCenter(shape) {
-    if (!shape) return { x: 0, y: 0 };
-    
-    switch (shape.type) {
-        case 'line':
-        case 'wall':
-        case 'rectangle':
-        case 'door':
-        case 'window':
-        case 'stairs':
-        case 'elevator':
-        case 'technical':
-        case 'furniture':
-        case 'bathroom':
-        case 'kitchen':
-        case 'tree':
-        case 'dimension':
-        case 'duct':
-        case 'gaine':
-        case 'column':
-        case 'poteau':
-        case 'pipe':
-        case 'conduit':
-        case 'beam':
-        case 'poutre':
-            return {
-                x: (shape.startX + shape.endX) / 2,
-                y: (shape.startY + shape.endY) / 2
-            };
-        case 'circle':
-            return {
-                x: shape.startX,
-                y: shape.startY
-            };
-        case 'text':
-            return {
-                x: shape.x || 0,
-                y: shape.y || 0
-            };
-        default:
-            return { x: 0, y: 0 };
-    }
-}
-
-function getRotationHandleAt(x, y) {
-    if (!selectedShape) return null;
-    
-    const handles = getRotationHandles(selectedShape);
-    for (let handle of handles) {
-        const dx = x - handle.x;
-        const dy = y - handle.y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        if (distance <= handle.size + 5) { // Tolérance de 5px
-            return handle;
-        }
-    }
-    return null;
 }
 
 // Règles améliorées - Version adaptée au canvas maximisé
@@ -1472,3 +1256,13 @@ function drawRulers() {
         rulerV.appendChild(mark);
     }
 }
+
+// Export des fonctions globales pour compatibilité
+window.redraw = redraw;
+window.drawGrid = drawGrid;
+window.drawShape = drawShape;
+window.drawTempShape = drawTempShape;
+window.highlightShape = highlightShape;
+window.drawResizeHandles = drawResizeHandles;
+window.drawRotationHandles = drawRotationHandles;
+window.drawRulers = drawRulers;

@@ -3,116 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=3.0, user-scalable=yes">
-    <title>ArchiDraw Pro - Plateforme de Dessin Architectural Avancée</title>
+    <title>ArchiDraw - Plateforme de Dessin Architectural</title>
     <link rel="stylesheet" href="style.css">
-    <style>
-        /* Styles spéciaux pour les nouveaux outils */
-        .tool-separator {
-            width: 60px;
-            height: 2px;
-            background: linear-gradient(90deg, transparent 0%, #777 20%, #777 80%, transparent 100%);
-            margin: 8px 5px;
-            border-radius: 1px;
-        }
-
-        /* Icônes spécialisées pour les nouveaux outils */
-        .tool-btn[data-tool="column"] {
-            background: linear-gradient(145deg, #606060 0%, #707070 100%);
-        }
-
-        .tool-btn[data-tool="beam"] {
-            background: linear-gradient(145deg, #505050 0%, #606060 100%);
-        }
-
-        .tool-btn[data-tool="duct"] {
-            background: linear-gradient(145deg, #808080 0%, #909090 100%);
-        }
-
-        .tool-btn[data-tool="pipe"] {
-            background: linear-gradient(145deg, #4682B4 0%, #5F9EA0 100%);
-        }
-
-        .tool-btn[data-tool="column"]:hover,
-        .tool-btn[data-tool="beam"]:hover,
-        .tool-btn[data-tool="duct"]:hover,
-        .tool-btn[data-tool="pipe"]:hover {
-            transform: translateY(-2px) scale(1.05);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-        }
-
-        /* Animation spéciale pour les outils structurels */
-        .tool-btn[data-tool="column"]:active {
-            background: linear-gradient(145deg, #4CAF50 0%, #45a049 100%);
-        }
-
-        .tool-btn[data-tool="beam"]:active {
-            background: linear-gradient(145deg, #FF9800 0%, #F57C00 100%);
-        }
-
-        /* Tooltip amélioré pour les nouveaux outils */
-        .tool-btn[data-tool="column"]:hover::after {
-            content: "Poteau/Colonne (P)";
-        }
-
-        .tool-btn[data-tool="beam"]:hover::after {
-            content: "Poutre (B)";
-        }
-
-        .tool-btn[data-tool="duct"]:hover::after {
-            content: "Gaine technique (I)";
-        }
-
-        .tool-btn[data-tool="pipe"]:hover::after {
-            content: "Conduit/Tuyauterie (C)";
-        }
-    </style>
 </head>
 <body>
     <div class="container fade-in">
-        <!-- Toolbar avec outils architecturaux complets -->
+        <!-- Toolbar avec outils architecturaux -->
         <div class="toolbar">
-            <!-- Outils de base -->
             <button class="tool-btn active" data-tool="select" title="Sélectionner (V)">↖</button>
             <button class="tool-btn" data-tool="line" title="Ligne (L)">╱</button>
             <button class="tool-btn" data-tool="rectangle" title="Rectangle">▭</button>
             <button class="tool-btn" data-tool="circle" title="Cercle">○</button>
-            
-            <!-- Séparateur visuel -->
-            <div class="tool-separator"></div>
-            
-            <!-- Éléments structurels -->
-            <button class="tool-btn" data-tool="wall" title="Mur (F2)">▬</button>
-            <button class="tool-btn" data-tool="column" title="Poteau/Colonne (P)">⬜</button>
-            <button class="tool-btn" data-tool="beam" title="Poutre (B)">═</button>
-            
-            <!-- Ouvertures -->
-            <button class="tool-btn" data-tool="door" title="Porte (O)">🚪</button>
-            <button class="tool-btn" data-tool="window" title="Fenêtre (F3)">⊞</button>
-            
-            <!-- Circulation -->
-            <button class="tool-btn" data-tool="stairs" title="Escalier (F4)">╬</button>
+            <button class="tool-btn" data-tool="wall" title="Mur">▬</button>
+            <button class="tool-btn" data-tool="door" title="Porte">🚪</button>
+            <button class="tool-btn" data-tool="window" title="Fenêtre">⊞</button>
+            <button class="tool-btn" data-tool="text" title="Texte (T)">T</button>
+            <button class="tool-btn" data-tool="stairs" title="Escalier">╬</button>
             <button class="tool-btn" data-tool="elevator" title="Ascenseur">▣</button>
-            
-            <!-- Séparateur visuel -->
-            <div class="tool-separator"></div>
-            
-            <!-- Éléments techniques -->
-            <button class="tool-btn" data-tool="duct" title="Gaine technique (I)">⬛</button>
-            <button class="tool-btn" data-tool="pipe" title="Conduit/Tuyauterie (C)">▐</button>
             <button class="tool-btn" data-tool="technical" title="Espace technique">⚙</button>
-            
-            <!-- Équipements -->
+            <button class="tool-btn" data-tool="dimension" title="Cotation">↔</button>
             <button class="tool-btn" data-tool="furniture" title="Meuble">▤</button>
             <button class="tool-btn" data-tool="bathroom" title="Salle de bain">🚿</button>
             <button class="tool-btn" data-tool="kitchen" title="Cuisine">☰</button>
-            
-            <!-- Séparateur visuel -->
-            <div class="tool-separator"></div>
-            
-            <!-- Extérieur et outils spéciaux -->
             <button class="tool-btn" data-tool="tree" title="Arbre">🌳</button>
-            <button class="tool-btn" data-tool="dimension" title="Cotation">↔</button>
-            <button class="tool-btn" data-tool="text" title="Texte (T)">T</button>
+            <button class="tool-btn" data-tool="duct" title="Gaine technique">🔧</button>
+            <button class="tool-btn" data-tool="column" title="Poteau/Colonne">⚫</button>
+            <button class="tool-btn" data-tool="pipe" title="Conduit/Tuyau">〰</button>
+            <button class="tool-btn" data-tool="beam" title="Poutre">═</button>
             <button class="tool-btn" data-tool="erase" title="Gomme (E)">🧽</button>
         </div>
 
@@ -192,7 +109,6 @@
                 <hr style="margin: 10px 0; opacity: 0.3; border-color: #FF9800;">
                 <div style="font-size: 11px; color: #ccc; line-height: 1.5;">
                     🟧 <strong>Poignées orange:</strong> Glissez pour redimensionner<br>
-                    🔵 <strong>Poignées bleues:</strong> Rotation libre<br>
                     ⌨️ <strong>Shift + glisser:</strong> Proportions verrouillées<br>
                     🔲 <strong>Échap:</strong> Annuler l'opération
                 </div>
@@ -213,7 +129,7 @@
         <!-- Panneau de propriétés -->
         <div class="properties hidden scale-in">
             <h2 style="color: #2c3e50; margin-bottom: 20px; font-size: 18px; text-align: center;">
-                🎨 Propriétés ArchiDraw Pro
+                🎨 Propriétés ArchiDraw
             </h2>
             
             <div class="property-group">
@@ -300,47 +216,35 @@
                 </button>
             </div>
 
-            <!-- Aide rapide améliorée -->
+            <!-- Aide rapide -->
             <div class="property-group" style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); border-color: #2196f3;">
                 <h3 style="color: #1976d2;">💡 Aide rapide</h3>
                 <div style="font-size: 12px; line-height: 1.6; color: #1565c0;">
                     <p><strong>🖱️ Sélection:</strong> Cliquez sur une forme</p>
                     <p><strong>🟧 Redimensionner:</strong> Poignées orange</p>
                     <p><strong>🔵 Rotation:</strong> Poignées bleues</p>
-                    <p><strong>⌨️ Raccourcis:</strong> V=Sélection, L=Ligne, P=Poteau, B=Poutre</p>
-                    <p><strong>🏗️ Nouveaux:</strong> O=Porte, C=Conduit, I=Gaine</p>
+                    <p><strong>⌨️ Raccourcis:</strong> V=Sélection, L=Ligne, T=Texte</p>
                     <p><strong>🔲 Échap:</strong> Désélectionner</p>
+                    <p><strong>🔄 Rotation:</strong> Tous les outils supportent la rotation</p>
                 </div>
                 <button onclick="window.showArchiDrawHelp && showArchiDrawHelp()" 
                         style="width: 100%; margin-top: 10px; padding: 8px; border: none; background: #2196f3; color: white; border-radius: 4px; cursor: pointer;">
                     📖 Aide complète
                 </button>
             </div>
-
-            <!-- Nouveaux raccourcis -->
-            <div class="property-group" style="background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); border-color: #9c27b0;">
-                <h3 style="color: #7b1fa2;">🎹 Raccourcis Avancés</h3>
-                <div style="font-size: 11px; line-height: 1.4; color: #6a1b9a;">
-                    <p><strong>🏗️ Structure:</strong> P=Poteau, B=Poutre, W=Mur</p>
-                    <p><strong>🚪 Ouvertures:</strong> O=Porte, F3=Fenêtre</p>
-                    <p><strong>🔧 Technique:</strong> I=Gaine, C=Conduit</p>
-                    <p><strong>🔢 Rapide:</strong> 1-9=Outils, F2-F4=Spéciaux</p>
-                    <p><strong>⚡ Actions:</strong> R=Rotation, G=Grille, S=Snap</p>
-                </div>
-            </div>
         </div>
     </div>
 
-    <!-- Scripts JavaScript modulaires -->
-    <script src="variables.js"></script>
-    <script src="drawing.js"></script>
-    
-    <script src="events-handlers.js"></script>
-    <script src="events-actions.js"></script>
-    <script src="shapes.js"></script>
-    <script src="eraser.js"></script>
-    <script src="utils.js"></script>
-    <script src="main.js"></script>
+    <!-- Scripts JavaScript modulaires - Ordre de chargement corrigé -->
+    <!-- Ordre optimal pour éviter les références manquantes -->
+<script src="variables.js"></script>     <!-- Variables globales -->
+<script src="shapes.js"></script>        <!-- Fonctions de formes -->
+<script src="drawing.js"></script>       <!-- Fonctions de dessin -->
+<script src="eraser.js"></script>        <!-- Fonctions de gomme -->
+<script src="utils.js"></script>         <!-- Fonctions utilitaires -->
+<script src="events-actions.js"></script><!-- Actions -->
+<script src="events-handlers.js"></script><!-- Gestionnaires -->
+<script src="main.js"></script>          <!-- Initialisation -->
 
     <!-- Script d'initialisation -->
     <script>
@@ -368,25 +272,13 @@
                 });
             });
 
-            // Effet spécial pour les nouveaux outils
-            document.querySelectorAll('[data-tool="column"], [data-tool="beam"], [data-tool="duct"], [data-tool="pipe"]').forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // Animation spéciale pour les nouveaux outils
-                    this.style.animation = 'pulse 0.3s ease';
-                    setTimeout(() => {
-                        this.style.animation = '';
-                    }, 300);
-                });
-            });
-
             // Message de bienvenue
-            console.log('🎨 ArchiDraw Pro - Plateforme de Dessin Architectural Avancée');
-            console.log('🏗️ Version avec éléments structurels et techniques');
-            console.log('🚀 Nouvelles formes : Poteaux, Poutres, Gaines, Conduits');
-            console.log('⌨️ Raccourcis étendus activés !');
+            console.log('🎨 ArchiDraw Pro - Plateforme de Dessin Architectural');
+            console.log('📐 Version avec rotation universelle et nouveaux outils');
+            console.log('🚀 Toutes les fonctionnalités activées !');
         });
 
-        // Gestion des raccourcis globaux étendus
+        // Gestion des raccourcis globaux
         document.addEventListener('keydown', function(e) {
             // F1 pour l'aide
             if (e.key === 'F1') {
@@ -401,24 +293,6 @@
                 e.preventDefault();
                 if (window.toggleFullscreen) {
                     toggleFullscreen();
-                }
-            }
-
-            // Raccourcis spéciaux pour les nouvelles formes
-            if (!e.ctrlKey && !e.altKey) {
-                switch(e.key.toLowerCase()) {
-                    case 'p':
-                        e.preventDefault();
-                        if (window.selectTool) selectTool('column');
-                        break;
-                    case 'b':
-                        e.preventDefault();
-                        if (window.selectTool) selectTool('beam');
-                        break;
-                    case 'i':
-                        e.preventDefault();
-                        if (window.selectTool) selectTool('duct');
-                        break;
                 }
             }
         });
@@ -442,12 +316,8 @@
                     animation: slideInRight 0.5s ease;
                 `;
                 notification.innerHTML = `
-                    <div style="font-weight: bold; margin-bottom: 5px;">🎉 ArchiDraw Pro !</div>
-                    <div>Nouvelles formes architecturales disponibles :</div>
-                    <div style="margin-top: 8px; font-size: 12px; opacity: 0.9;">
-                        🏗️ Poteaux (P) • Poutres (B) • Gaines (I) • Conduits (C)<br>
-                        🚪 Portes améliorées avec rotation et redimensionnement !
-                    </div>
+                    <div style="font-weight: bold; margin-bottom: 5px;">🎉 Rotation universelle activée !</div>
+                    <div>Tous vos outils peuvent maintenant être tournés librement ! Utilisez les poignées bleues ou la touche R.</div>
                 `;
                 document.body.appendChild(notification);
                 
@@ -457,28 +327,6 @@
                 }, 5000);
             }
         }, 2000);
-
-        // Ajout des animations CSS manquantes
-        if (!document.getElementById('customAnimations')) {
-            const style = document.createElement('style');
-            style.id = 'customAnimations';
-            style.textContent = `
-                @keyframes slideInRight {
-                    from { transform: translateX(100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes slideOutRight {
-                    from { transform: translateX(0); opacity: 1; }
-                    to { transform: translateX(100%); opacity: 0; }
-                }
-                @keyframes pulse {
-                    0% { transform: scale(1); }
-                    50% { transform: scale(1.1); }
-                    100% { transform: scale(1); }
-                }
-            `;
-            document.head.appendChild(style);
-        }
     </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-// shapes.js - Gestion des formes ArchiDraw avec redimensionnement
+// shapes.js - Gestion des formes ArchiDraw avec redimensionnement et rotation universelle
 
 // Shape creation
 function createShape(endX, endY) {
@@ -12,12 +12,13 @@ function createShape(endX, endY) {
         strokeColor: document.getElementById('strokeColor').value,
         strokeWidth: parseInt(document.getElementById('strokeWidth').value),
         fillColor: document.getElementById('fillColor').value,
-        fill: document.getElementById('fillShape').checked
+        fill: document.getElementById('fillShape').checked,
+        rotation: 0 // Initialiser la rotation pour tous les outils
     };
 
     if (currentTool === 'circle') {
         shape.radius = Math.sqrt(Math.pow(endX - startX, 2) + Math.pow(endY - startY, 2));
-    } else if (['rectangle', 'stairs', 'elevator', 'technical', 'furniture', 'bathroom', 'kitchen'].includes(currentTool)) {
+    } else if (['rectangle', 'stairs', 'elevator', 'technical', 'furniture', 'bathroom', 'kitchen', 'door', 'duct', 'gaine', 'column', 'poteau', 'pipe', 'conduit', 'beam', 'poutre'].includes(currentTool)) {
         shape.endX = startX + Math.max(Math.abs(endX - startX), minSize) * Math.sign(endX - startX);
         shape.endY = startY + Math.max(Math.abs(endY - startY), minSize) * Math.sign(endY - startY);
     }
@@ -38,7 +39,8 @@ function createDimension(x1, y1, x2, y2) {
         endY: y2,
         distance: Math.round(distance),
         strokeColor: '#ff0000',
-        fontSize: 12
+        fontSize: 12,
+        rotation: 0
     };
     shapes.push(shape);
     saveHistory();
@@ -56,7 +58,8 @@ function addText(x, y) {
             text: text.trim(),
             fontSize: parseInt(document.getElementById('fontSize').value),
             fontFamily: document.getElementById('fontFamily').value,
-            fillColor: document.getElementById('strokeColor').value
+            fillColor: document.getElementById('strokeColor').value,
+            rotation: 0
         });
         saveHistory();
         redraw();
@@ -83,6 +86,17 @@ function selectShape(x, y) {
 }
 
 function isPointInShape(x, y, shape) {
+    // Si la forme a une rotation, appliquer la rotation inverse au point de test
+    if (shape.rotation && shape.rotation !== 0) {
+        const center = getShapeCenter(shape);
+        const cos = Math.cos(-shape.rotation);
+        const sin = Math.sin(-shape.rotation);
+        const dx = x - center.x;
+        const dy = y - center.y;
+        x = center.x + dx * cos - dy * sin;
+        y = center.y + dx * sin + dy * cos;
+    }
+    
     switch (shape.type) {
         case 'line':
         case 'wall':
@@ -95,6 +109,15 @@ function isPointInShape(x, y, shape) {
         case 'furniture':
         case 'bathroom':
         case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             const minX = Math.min(shape.startX, shape.endX);
             const minY = Math.min(shape.startY, shape.endY);
             const maxX = Math.max(shape.startX, shape.endX);
@@ -104,8 +127,6 @@ function isPointInShape(x, y, shape) {
             const dx = x - shape.startX;
             const dy = y - shape.startY;
             return Math.sqrt(dx * dx + dy * dy) <= shape.radius;
-        case 'door':
-            return Math.abs(x - shape.startX) < 60 && Math.abs(y - shape.startY) < 60;
         case 'dimension':
             return isPointNearLine(x, y, shape.startX, shape.startY, shape.endX, shape.endY, 10);
         case 'tree':
@@ -168,13 +189,21 @@ function moveShape(shape, deltaX, deltaY) {
         case 'kitchen':
         case 'tree':
         case 'dimension':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             if (shape.startX !== undefined) shape.startX += deltaX;
             if (shape.startY !== undefined) shape.startY += deltaY;
             if (shape.endX !== undefined) shape.endX += deltaX;
             if (shape.endY !== undefined) shape.endY += deltaY;
             break;
         case 'circle':
-        case 'door':
             if (shape.startX !== undefined) shape.startX += deltaX;
             if (shape.startY !== undefined) shape.startY += deltaY;
             break;
@@ -217,6 +246,15 @@ function rotateShape(shape, angle, center) {
         case 'kitchen':
         case 'tree':
         case 'dimension':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             if (shape.startX !== undefined && shape.startY !== undefined) {
                 const start = rotatePoint(shape.startX, shape.startY, center.x, center.y, angle);
                 shape.startX = start.x;
@@ -227,14 +265,16 @@ function rotateShape(shape, angle, center) {
                 shape.endX = end.x;
                 shape.endY = end.y;
             }
+            // Mettre à jour l'angle de rotation stocké pour l'affichage
+            shape.rotation = (shape.rotation + angle) % (2 * Math.PI);
             break;
         case 'circle':
-        case 'door':
             if (shape.startX !== undefined && shape.startY !== undefined) {
                 const rotated = rotatePoint(shape.startX, shape.startY, center.x, center.y, angle);
                 shape.startX = rotated.x;
                 shape.startY = rotated.y;
             }
+            // Pour les cercles, pas besoin de rotation visuelle
             break;
         case 'text':
             if (shape.x !== undefined && shape.y !== undefined) {
@@ -242,7 +282,7 @@ function rotateShape(shape, angle, center) {
                 shape.x = textRotated.x;
                 shape.y = textRotated.y;
                 // Pour le texte, stocker aussi l'angle de rotation pour l'affichage
-                shape.rotation += angle;
+                shape.rotation = (shape.rotation + angle) % (2 * Math.PI);
             }
             break;
     }
@@ -264,12 +304,20 @@ function getShapeCenter(shape) {
         case 'kitchen':
         case 'tree':
         case 'dimension':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             return {
                 x: (shape.startX + shape.endX) / 2,
                 y: (shape.startY + shape.endY) / 2
             };
         case 'circle':
-        case 'door':
             return {
                 x: shape.startX,
                 y: shape.startY
@@ -310,6 +358,138 @@ function getRotationHandleAt(x, y) {
     if (!selectedShape) return null;
     
     const handles = getRotationHandles(selectedShape);
+    for (let handle of handles) {
+        const dx = x - handle.x;
+        const dy = y - handle.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        if (distance <= handle.size + 5) { // Tolérance de 5px
+            return handle;
+        }
+    }
+    return null;
+}
+
+function getRotationHandles(shape) {
+    if (!shape) return [];
+    
+    const center = getShapeCenter(shape);
+    const handles = [];
+    const handleSize = 8;
+    const distance = 50; // Distance des poignées du centre
+    
+    // Créer 4 poignées de rotation autour de la forme
+    for (let i = 0; i < 4; i++) {
+        const angle = (i * Math.PI) / 2;
+        handles.push({
+            x: center.x + Math.cos(angle) * distance,
+            y: center.y + Math.sin(angle) * distance,
+            size: handleSize,
+            angle: angle
+        });
+    }
+
+    return handles;
+}
+
+// Fonctions pour les poignées de redimensionnement
+function getResizeHandles(shape) {
+    if (!shape) return [];
+    
+    const handles = [];
+    const handleSize = 6;
+    
+    switch (shape.type) {
+        case 'line':
+        case 'wall':
+            handles.push(
+                { x: shape.startX, y: shape.startY, size: handleSize, type: 'start' },
+                { x: shape.endX, y: shape.endY, size: handleSize, type: 'end' }
+            );
+            break;
+            
+        case 'rectangle':
+        case 'window':
+        case 'stairs':
+        case 'elevator':
+        case 'technical':
+        case 'furniture':
+        case 'bathroom':
+        case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
+            const minX = Math.min(shape.startX, shape.endX);
+            const minY = Math.min(shape.startY, shape.endY);
+            const maxX = Math.max(shape.startX, shape.endX);
+            const maxY = Math.max(shape.startY, shape.endY);
+            
+            handles.push(
+                { x: minX, y: minY, size: handleSize, type: 'nw' },
+                { x: maxX, y: minY, size: handleSize, type: 'ne' },
+                { x: maxX, y: maxY, size: handleSize, type: 'se' },
+                { x: minX, y: maxY, size: handleSize, type: 'sw' },
+                { x: (minX + maxX) / 2, y: minY, size: handleSize, type: 'n' },
+                { x: maxX, y: (minY + maxY) / 2, size: handleSize, type: 'e' },
+                { x: (minX + maxX) / 2, y: maxY, size: handleSize, type: 's' },
+                { x: minX, y: (minY + maxY) / 2, size: handleSize, type: 'w' }
+            );
+            break;
+            
+        case 'circle':
+            handles.push(
+                { x: shape.startX + shape.radius, y: shape.startY, size: handleSize, type: 'radius' },
+                { x: shape.startX - shape.radius, y: shape.startY, size: handleSize, type: 'radius' },
+                { x: shape.startX, y: shape.startY + shape.radius, size: handleSize, type: 'radius' },
+                { x: shape.startX, y: shape.startY - shape.radius, size: handleSize, type: 'radius' }
+            );
+            break;
+            
+        case 'tree':
+            const treeRadius = Math.min(Math.abs(shape.endX - shape.startX), 
+                                       Math.abs(shape.endY - shape.startY)) / 2;
+            const treeCenterX = (shape.startX + shape.endX) / 2;
+            const treeCenterY = (shape.startY + shape.endY) / 2;
+            
+            handles.push(
+                { x: treeCenterX + treeRadius, y: treeCenterY, size: handleSize, type: 'radius' },
+                { x: treeCenterX - treeRadius, y: treeCenterY, size: handleSize, type: 'radius' },
+                { x: treeCenterX, y: treeCenterY + treeRadius, size: handleSize, type: 'radius' },
+                { x: treeCenterX, y: treeCenterY - treeRadius, size: handleSize, type: 'radius' }
+            );
+            break;
+            
+        case 'text':
+            if (shape.text) {
+                ctx.save();
+                ctx.font = `${shape.fontSize}px ${shape.fontFamily || 'Arial'}`;
+                const metrics = ctx.measureText(shape.text);
+                const textWidth = metrics.width;
+                const textHeight = shape.fontSize;
+                ctx.restore();
+                
+                handles.push(
+                    { x: shape.x, y: shape.y, size: handleSize, type: 'nw' },
+                    { x: shape.x + textWidth, y: shape.y, size: handleSize, type: 'ne' },
+                    { x: shape.x + textWidth, y: shape.y + textHeight, size: handleSize, type: 'se' },
+                    { x: shape.x, y: shape.y + textHeight, size: handleSize, type: 'sw' }
+                );
+            }
+            break;
+    }
+    
+    return handles;
+}
+
+function getResizeHandleAt(x, y) {
+    if (!selectedShape) return null;
+    
+    const handles = getResizeHandles(selectedShape);
     for (let handle of handles) {
         const dx = x - handle.x;
         const dy = y - handle.y;
@@ -372,6 +552,15 @@ function updateShapePropertiesPanel() {
         case 'furniture':
         case 'bathroom':
         case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             const width = Math.abs(selectedShape.endX - selectedShape.startX);
             const height = Math.abs(selectedShape.endY - selectedShape.startY);
             const x = Math.min(selectedShape.startX, selectedShape.endX);
@@ -454,6 +643,15 @@ function applyShapeProperties() {
         case 'furniture':
         case 'bathroom':
         case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             if (widthInput && heightInput) {
                 const newWidth = Math.max(10, parseFloat(widthInput.value));
                 const newHeight = Math.max(10, parseFloat(heightInput.value));
@@ -535,6 +733,15 @@ function showTransformInfo() {
         case 'furniture':
         case 'bathroom':
         case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             const width = Math.abs(selectedShape.endX - selectedShape.startX);
             const height = Math.abs(selectedShape.endY - selectedShape.startY);
             dimensionsInfo = `<div><strong>Taille:</strong> ${Math.round(width)} × ${Math.round(height)}px</div>`;
@@ -578,3 +785,21 @@ function showTransformInfo() {
         }
     }, 6000);
 }
+
+// Fonctions de compatibilité et export global
+window.selectShape = selectShape;
+window.createShape = createShape;
+window.addText = addText;
+window.createDimension = createDimension;
+window.moveShape = moveShape;
+window.rotateShape = rotateShape;
+window.getShapeCenter = getShapeCenter;
+window.showTransformInfo = showTransformInfo;
+window.updateShapePropertiesPanel = updateShapePropertiesPanel;
+window.applyShapeProperties = applyShapeProperties;
+window.rotateSelected = rotateSelected;
+window.getRotationHandles = getRotationHandles;
+window.getRotationHandleAt = getRotationHandleAt;
+window.getResizeHandles = getResizeHandles;
+window.getResizeHandleAt = getResizeHandleAt;
+window.isPointInShape = isPointInShape;

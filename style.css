@@ -1,5 +1,4 @@
-
-        * {
+* {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -97,7 +96,7 @@
             max-height: none;
         }
 
-        /* Curseurs spécialisés avec animations */
+        /* Curseurs spécialisés avec animations - Version étendue */
         #drawingCanvas.cursor-select { cursor: default; }
         #drawingCanvas.cursor-line { 
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="2" y1="2" x2="22" y2="22" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
@@ -122,6 +121,51 @@
         }
         #drawingCanvas.cursor-dimension { 
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12" stroke="red" stroke-width="2"/><polygon points="4,10 4,14 2,12" fill="red"/><polygon points="20,10 20,14 22,12" fill="red"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-stairs { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M4 20 L8 20 L8 16 L12 16 L12 12 L16 12 L16 8 L20 8" fill="none" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-elevator { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="none" stroke="black" stroke-width="2"/><line x1="11" y1="6" x2="11" y2="18" stroke="black"/><line x1="13" y1="6" x2="13" y2="18" stroke="black"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-technical { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" fill="lightgray" stroke="black" stroke-width="2"/><text x="12" y="14" text-anchor="middle" font-size="8" fill="black">TECH</text><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-furniture { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" fill="brown" stroke="black" stroke-width="2"/><circle cx="18" cy="12" r="1" fill="black"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-bathroom { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" fill="lightblue" stroke="black" stroke-width="2"/><circle cx="12" cy="8" r="1" fill="blue"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-kitchen { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" fill="beige" stroke="black" stroke-width="2"/><circle cx="8" cy="10" r="1" fill="black"/><circle cx="16" cy="10" r="1" fill="black"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-tree { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="10" r="6" fill="green" stroke="darkgreen" stroke-width="1"/><rect x="11" y="16" width="2" height="4" fill="brown"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-duct { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" fill="lightgray" stroke="black" stroke-width="2"/><line x1="8" y1="8" x2="8" y2="16" stroke="gray"/><line x1="12" y1="8" x2="12" y2="16" stroke="gray"/><line x1="16" y1="8" x2="16" y2="16" stroke="gray"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-gaine { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" fill="lightgray" stroke="black" stroke-width="2"/><line x1="8" y1="8" x2="8" y2="16" stroke="gray"/><line x1="12" y1="8" x2="12" y2="16" stroke="gray"/><line x1="16" y1="8" x2="16" y2="16" stroke="gray"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-column { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="darkgray" stroke="black" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="gray" stroke-width="1"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-poteau { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" fill="darkgray" stroke="black" stroke-width="2"/><line x1="8" y1="8" x2="16" y2="16" stroke="gray"/><line x1="16" y1="8" x2="8" y2="16" stroke="gray"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-pipe { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="6" fill="lightblue" stroke="blue" stroke-width="2"/><line x1="8" y1="9" x2="8" y2="15" stroke="darkblue"/><line x1="12" y1="9" x2="12" y2="15" stroke="darkblue"/><line x1="16" y1="9" x2="16" y2="15" stroke="darkblue"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-conduit { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="6" fill="lightblue" stroke="blue" stroke-width="2"/><line x1="8" y1="9" x2="8" y2="15" stroke="darkblue"/><line x1="12" y1="9" x2="12" y2="15" stroke="darkblue"/><line x1="16" y1="9" x2="16" y2="15" stroke="darkblue"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-beam { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="4" fill="darkgray" stroke="black" stroke-width="2"/><rect x="4" y="8" width="16" height="2" fill="gray"/><rect x="4" y="14" width="16" height="2" fill="gray"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
+        }
+        #drawingCanvas.cursor-poutre { 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><rect x="10" y="4" width="4" height="16" fill="darkgray" stroke="black" stroke-width="2"/><rect x="8" y="4" width="2" height="16" fill="gray"/><rect x="14" y="4" width="2" height="16" fill="gray"/><circle cx="12" cy="12" r="2" fill="red"/></svg>') 12 12, crosshair; 
         }
         #drawingCanvas.cursor-move { 
             cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><g fill="black"><polygon points="12,2 14,6 10,6"/><polygon points="12,22 10,18 14,18"/><polygon points="2,12 6,10 6,14"/><polygon points="22,12 18,14 18,10"/></g><circle cx="12" cy="12" r="3" fill="blue"/></svg>') 12 12, move; 
@@ -591,6 +635,17 @@
         @keyframes scaleIn {
             from { transform: scale(0.8); opacity: 0; }
             to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Animations pour les notifications */
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes slideOutRight {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
         }
 
         /* Print styles optimisés */

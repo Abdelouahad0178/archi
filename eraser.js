@@ -1,4 +1,4 @@
-// eraser.js - Système de gomme intelligent ArchiDraw
+// eraser.js - Système de gomme intelligent ArchiDraw avec support des nouveaux outils
 
 // Configuration de la gomme
 function setupEraserControls() {
@@ -11,7 +11,7 @@ function setupEraserControls() {
     });
 }
 
-// Fonction de gomme améliorée - Efface localement
+// Fonction de gomme améliorée - Efface localement avec support des nouveaux outils
 function eraseAtPoint(x, y) {
     let hasErased = false;
     const newShapes = [];
@@ -52,10 +52,29 @@ function erasePartOfShape(x, y, shape) {
             return erasePartOfLine(x, y, shape, range);
             
         case 'rectangle':
+        case 'door':
+        case 'window':
+        case 'stairs':
+        case 'elevator':
+        case 'technical':
+        case 'furniture':
+        case 'bathroom':
+        case 'kitchen':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             return erasePartOfRectangle(x, y, shape, range);
             
         case 'circle':
             return erasePartOfCircle(x, y, shape, range);
+            
+        case 'tree':
+            return erasePartOfTree(x, y, shape, range);
             
         case 'text':
             // Pour le texte, on supprime complètement si touché
@@ -63,6 +82,9 @@ function erasePartOfShape(x, y, shape) {
                 return { erased: true, newShapes: [] };
             }
             break;
+            
+        case 'dimension':
+            return erasePartOfLine(x, y, shape, range);
             
         default:
             // Pour les autres formes complexes, supprimer complètement si touchées
@@ -165,16 +187,16 @@ function erasePartOfRectangle(x, y, shape, range) {
     
     // Créer des lignes pour les bords du rectangle, en évitant la zone effacée
     const edges = [
-        { startX: minX, startY: minY, endX: maxX, endY: minY }, // haut
-        { startX: maxX, startY: minY, endX: maxX, endY: maxY }, // droite
-        { startX: maxX, startY: maxY, endX: minX, endY: maxY }, // bas
-        { startX: minX, startY: maxY, endX: minX, endY: minY }  // gauche
+        { startX: minX, startY: minY, endX: maxX, endY: minY, type: 'top' }, // haut
+        { startX: maxX, startY: minY, endX: maxX, endY: maxY, type: 'right' }, // droite
+        { startX: maxX, startY: maxY, endX: minX, endY: maxY, type: 'bottom' }, // bas
+        { startX: minX, startY: maxY, endX: minX, endY: minY, type: 'left' }  // gauche
     ];
     
     edges.forEach(edge => {
         const lineShape = {
             ...shape,
-            type: 'line',
+            type: shape.type === 'wall' ? 'wall' : 'line', // Préserver le type mur si c'était un mur rectangulaire
             startX: edge.startX,
             startY: edge.startY,
             endX: edge.endX,
@@ -239,6 +261,23 @@ function erasePartOfCircle(x, y, shape, range) {
     return { erased: true, newShapes: newShapes };
 }
 
+function erasePartOfTree(x, y, shape, range) {
+    const treeX = (shape.startX + shape.endX) / 2;
+    const treeY = (shape.startY + shape.endY) / 2;
+    const treeRadius = Math.min(Math.abs(shape.endX - shape.startX), Math.abs(shape.endY - shape.startY)) / 2;
+    
+    const dx = x - treeX;
+    const dy = y - treeY;
+    const distanceToCenter = Math.sqrt(dx * dx + dy * dy);
+    
+    // Si la gomme touche l'arbre, le supprimer complètement (les arbres sont complexes à découper)
+    if (distanceToCenter <= treeRadius + range) {
+        return { erased: true, newShapes: [] };
+    }
+    
+    return { erased: false };
+}
+
 function getClosestPointOnLine(px, py, x1, y1, x2, y2) {
     const A = px - x1;
     const B = py - y1;
@@ -279,6 +318,15 @@ function isPointInEraserRange(x, y, shape, range) {
         case 'furniture':
         case 'bathroom':
         case 'kitchen':
+        case 'door':
+        case 'duct':
+        case 'gaine':
+        case 'column':
+        case 'poteau':
+        case 'pipe':
+        case 'conduit':
+        case 'beam':
+        case 'poutre':
             const minX = Math.min(shape.startX, shape.endX) - range;
             const minY = Math.min(shape.startY, shape.endY) - range;
             const maxX = Math.max(shape.startX, shape.endX) + range;
@@ -288,8 +336,6 @@ function isPointInEraserRange(x, y, shape, range) {
             const dx = x - shape.startX;
             const dy = y - shape.startY;
             return Math.sqrt(dx * dx + dy * dy) <= shape.radius + range;
-        case 'door':
-            return Math.abs(x - shape.startX) < 60 + range && Math.abs(y - shape.startY) < 60 + range;
         case 'dimension':
             return isPointNearLine(x, y, shape.startX, shape.startY, shape.endX, shape.endY, range);
         case 'tree':
@@ -302,3 +348,90 @@ function isPointInEraserRange(x, y, shape, range) {
     }
     return false;
 }
+
+// Fonction spécialisée pour effacer les nouveaux outils techniques
+function eraseSpecializedShape(x, y, shape, range) {
+    // Gestion spécialisée pour les nouveaux outils
+    switch (shape.type) {
+        case 'duct':
+        case 'gaine':
+            // Pour les gaines, créer des segments plus courts
+            return erasePartOfRectangle(x, y, shape, range);
+            
+        case 'column':
+        case 'poteau':
+            // Pour les poteaux, soit tout soit rien (structure importante)
+            if (isPointInEraserRange(x, y, shape, range)) {
+                return { erased: true, newShapes: [] };
+            }
+            return { erased: false };
+            
+        case 'pipe':
+        case 'conduit':
+            // Pour les conduits, permettre la segmentation
+            return erasePartOfRectangle(x, y, shape, range);
+            
+        case 'beam':
+        case 'poutre':
+            // Pour les poutres, soit tout soit rien (structure importante)
+            if (isPointInEraserRange(x, y, shape, range)) {
+                return { erased: true, newShapes: [] };
+            }
+            return { erased: false };
+            
+        default:
+            return { erased: false };
+    }
+}
+
+// Amélioration de la fonction principale avec gestion spécialisée
+function erasePartOfShapeEnhanced(x, y, shape) {
+    const range = eraserSize / 2;
+    
+    // Vérifier d'abord si c'est un outil spécialisé
+    if (TECHNICAL_TOOLS.includes(shape.type)) {
+        return eraseSpecializedShape(x, y, shape, range);
+    }
+    
+    // Sinon utiliser la fonction standard
+    return erasePartOfShape(x, y, shape);
+}
+
+// Fonction pour prévisualiser la zone d'effacement
+function drawEraserPreview(x, y) {
+    if (currentTool !== 'erase') return;
+    
+    ctx.save();
+    ctx.strokeStyle = '#ff0000';
+    ctx.fillStyle = 'rgba(255, 0, 0, 0.1)';
+    ctx.lineWidth = 2 / zoom;
+    ctx.setLineDash([5, 5]);
+    
+    ctx.beginPath();
+    ctx.arc(x, y, eraserSize / 2, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+    
+    ctx.restore();
+}
+
+// Statistiques d'effacement pour debug
+function getEraserStats() {
+    return {
+        size: eraserSize,
+        mode: currentTool === 'erase' ? 'active' : 'inactive',
+        supportedShapes: Object.keys(TOOL_DEFAULT_COLORS).length,
+        specializedTools: TECHNICAL_TOOLS.length
+    };
+}
+
+// Export pour debug
+window.ArchiDrawEraser = {
+    stats: getEraserStats,
+    previewErase: drawEraserPreview,
+    erasePartOfShape: erasePartOfShape
+};
+
+// Export des fonctions globales pour compatibilité
+window.setupEraserControls = setupEraserControls;
+window.eraseAtPoint = eraseAtPoint;
